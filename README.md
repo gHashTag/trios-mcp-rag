@@ -302,6 +302,26 @@ No Python / ReportLab substitute is supported. The pandoc + tectonic
 path is the only renderer per the R1 / CROWN warning carried over from
 the parent `gHashTag/trios` repo.
 
+### Image placement & dedup rules (must-read for agents)
+
+Before editing chapters, the image manifest, the Lua filter, the LaTeX
+template, or `src/pipeline.rs`, read the rules in [`docs/rag/`](docs/rag/):
+
+- [`docs/rag/IMAGE_PLACEMENT.md`](docs/rag/IMAGE_PLACEMENT.md) — single
+  source of truth for image placement and deduplication. Grep anchors:
+  `TRIOS_PHD_IMAGE_PLACEMENT`, `TRIOS_PHD_IMAGE_DEDUP`,
+  `TRIOS_PHD_CANONICAL_PIPELINE`, `TRIOS_PHD_RENDERER_FIRST`,
+  `TRIOS_PHD_STYLE_LOCK`.
+- [`docs/rag/IMAGE_MANIFEST_SCHEMA.md`](docs/rag/IMAGE_MANIFEST_SCHEMA.md)
+  — required SSOT image fields (`image_id`, `role`, `canonical_anchor`,
+  `priority`, `caption`, `source`, `file_hash`, `allowed_repeat_policy`).
+- [`docs/rag/PDF_QA_CHECKLIST.md`](docs/rag/PDF_QA_CHECKLIST.md) —
+  blocking checks to run before sharing or committing a generated PDF.
+
+If a PDF has duplicated or misplaced images, fix the SSOT / Markdown /
+Lua filter / LaTeX template — never the exported PDF. See
+`IMAGE_PLACEMENT.md` §9.
+
 ### Environment
 
 - `DATABASE_URL` (or `RAILWAY_SSOT_URL` as a fallback) — Postgres DSN.

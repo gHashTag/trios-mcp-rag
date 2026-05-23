@@ -53,14 +53,23 @@ Spot-check by opening the PDF and scanning the first three chapter
 openers and the title page. If the build pipeline emits a style hash
 or template version, log it.
 
-## 4. Hero-anchoring scan (no image trains)
+## 4. Hero-anchoring scan (no image trains) — `TRIOS_PHD_NO_IMAGE_TRAIN`
 
 Goal: catch consecutive hero panels rendered without intervening
 substantive text — the "image train" / "hero gallery" failure mode.
+This is the named invariant **`TRIOS_PHD_NO_IMAGE_TRAIN`** (see
+`docs/rag/trios-phd-canon.md` §2).
 
 Per rule 02, every hero panel must be anchored to a nearby substantive
 heading and body text. No two heroes back-to-back without a meaningful
 text buffer.
+
+Enforcement note: use a **soft keep-together** rule for the
+*section heading + hero/context block + first paragraph(s)* group. Do
+**not** insert a hard `\clearpage` (or `\newpage`) before every section
+— a hard clearpage per section creates short title-only pages whenever
+a section starts near the bottom of a page, and shows up in the QA
+scan as "very short non-empty pages".
 
 What to look for, page by page:
 
@@ -89,11 +98,11 @@ text under it (not just a caption).
 Worked example (2026-05 audit): a prior build flagged 6 image-heavy /
 low-context candidate pages, several of them adjacent — symptoms of
 duplicate "transition" headings that carried hero blocks of their own.
-Removing 7 such transition hero blocks reduced the candidate count to
-2, the early hero sequence then had text under each hero, the revised
-PDF settled at 145 A4 pages and passed `qpdf --check`. Use this as a
-reference shape: candidate count should drop materially, adjacency
-should disappear, and `qpdf --check` must still pass after the edit.
+Removing the transition hero blocks and applying a soft keep-together
+rule (rather than a hard `\clearpage` per section) reduced the
+candidate count to 1 (the title page only) and stabilised the build at
+150 A4 pages with `qpdf --check` clean. See
+`docs/qa/brochure-pdf-checklist.md` for the accepted numeric baseline.
 
 ## 5. Secret scan
 

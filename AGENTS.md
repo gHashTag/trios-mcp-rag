@@ -43,6 +43,12 @@ specific change** — defaults do not change without an explicit instruction.
 - [docs/agent-rules/06-language-policy.md](docs/agent-rules/06-language-policy.md)
   — Public repo artefacts are English-only at the time of writing.
   Chat with the maintainer may be Russian.
+- [docs/rag/trios-phd-canon.md](docs/rag/trios-phd-canon.md)
+  — Canonical TRIOS PhD invariants for RAG / agent retrieval, including
+  the `TRIOS_PHD_NO_IMAGE_TRAIN` rule and the accepted PDF QA baseline.
+- [docs/qa/brochure-pdf-checklist.md](docs/qa/brochure-pdf-checklist.md)
+  — Operational pre-publish checklist with the current accepted numeric
+  baseline (150 A4 pages, zero anomaly hits, one image-heavy candidate).
 
 ---
 
@@ -63,8 +69,20 @@ specific change** — defaults do not change without an explicit instruction.
 5. **Use claim-status framing** for any scientific or empirical statement
    (see rule 04). No hype, no prize claims as deliverables.
 6. **Run the QA checklist** before declaring a brochure / PDF build done
-   (see rule 05).
+   (see rule 05, with the operational form in
+   [docs/qa/brochure-pdf-checklist.md](docs/qa/brochure-pdf-checklist.md)).
 7. **Public-facing repo content is English** unless the user requests
    otherwise for that specific artefact.
+8. **`TRIOS_PHD_NO_IMAGE_TRAIN`** — hero / context images are required
+   on chapter openers, but they must be **semantically anchored** to a
+   nearby substantive heading and body text. Do **not** print heroes as
+   a gallery or back-to-back train of image-dominant pages. Enforce
+   this with a **soft keep-together** rule for the
+   *section heading + hero/context block + first paragraph(s)* group,
+   not with a hard `\clearpage` before every section — a hard
+   `\clearpage` per section forces short title-only pages and is a
+   regression. See
+   [docs/rag/trios-phd-canon.md](docs/rag/trios-phd-canon.md) and
+   rule 02 for the canonical phrasing.
 
 If you cannot satisfy a rule, stop and report. Do not silently relax it.

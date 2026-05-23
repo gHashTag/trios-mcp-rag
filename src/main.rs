@@ -1,6 +1,9 @@
 use serde_json::{json, Value};
-use std::io::{self, BufRead, Write};
 use std::env;
+use std::io::{self, BufRead, Write};
+use std::path::PathBuf;
+
+mod pipeline;
 
 fn dsn() -> String {
     env::var("DATABASE_URL")
@@ -83,6 +86,56 @@ fn tool_cover() -> anyhow::Result<Value> {
     Ok(json!({"content":[{"type":"text","text":tex}],"isError":false}))
 }
 
+/// MCP `build_pdf` tool: dispatch the SSOT -> PDF pipeline.
+///
+/// Arguments mirror the CLI flags; everything is optional. With `dry_run`
+/// set (or by default for the MCP tool, since most agents only want to
+/// validate), no PDF is produced.
+fn tool_build_pdf(args: &Value) -> anyhow::Result<Value> {
+    let mut cfg = pipeline::BuildConfig::default();
+    if let Some(s) = args.get("database_url_env").and_then(|v| v.as_str()) {
+        cfg.database_url_env = s.into();
+    }
+    if let Some(s) = args.get("chapters_table").and_then(|v| v.as_str()) {
+        cfg.chapters_table = s.into();
+    }
+    if let Some(s) = args.get("out_dir").and_then(|v| v.as_str()) {
+        cfg.out_dir = PathBuf::from(s);
+    }
+    if let Some(s) = args.get("build_dir").and_then(|v| v.as_str()) {
+        cfg.build_dir = PathBuf::from(s);
+    }
+    if let Some(s) = args.get("template").and_then(|v| v.as_str()) {
+        cfg.template = Some(PathBuf::from(s));
+    }
+    if let Some(s) = args.get("lua_filter").and_then(|v| v.as_str()) {
+        cfg.lua_filter = Some(PathBuf::from(s));
+    }
+    if let Some(s) = args.get("repo_root").and_then(|v| v.as_str()) {
+        cfg.repo_root = PathBuf::from(s);
+    }
+    if let Some(s) = args.get("pdf_name").and_then(|v| v.as_str()) {
+        cfg.pdf_name = s.into();
+    }
+    if let Some(n) = args.get("limit").and_then(|v| v.as_u64()) {
+        cfg.limit = Some(n as usize);
+    }
+    let dry_run_default = true;
+    cfg.dry_run = args
+        .get("dry_run")
+        .and_then(|v| v.as_bool())
+        .unwrap_or(dry_run_default);
+    let report = if cfg.dry_run {
+        pipeline::check(&cfg)?
+    } else {
+        pipeline::build(&cfg, &pipeline::load_from_postgres)?
+    };
+    Ok(json!({
+        "content": [{"type":"text","text": serde_json::to_string_pretty(&report)?}],
+        "isError": false
+    }))
+}
+
 fn tools_def() -> Value {
     json!([
         {"name":"search_chapters","description":"Full-text search across all 80 GOLDEN BRIDGE chapters in Railway SSOT",
@@ -94,11 +147,24 @@ fn tools_def() -> Value {
         {"name":"forbidden_audit","description":"Scan all chapters for policy violations",
          "inputSchema":{"type":"object","properties":{}}},
         {"name":"build_cover","description":"Generate LaTeX titlepage for GOLDEN BRIDGE v27",
-         "inputSchema":{"type":"object","properties":{}}}
+         "inputSchema":{"type":"object","properties":{}}},
+        {"name":"build_pdf","description":"Run the SSOT->Markdown->pandoc->tectonic->PDF pipeline. Defaults to dry_run=true (check env/deps/paths only). Set dry_run=false to actually build.",
+         "inputSchema":{"type":"object","properties":{
+            "dry_run":{"type":"boolean","default":true},
+            "database_url_env":{"type":"string","default":"DATABASE_URL"},
+            "chapters_table":{"type":"string","default":"ssot_brochure.chapters"},
+            "out_dir":{"type":"string"},
+            "build_dir":{"type":"string"},
+            "template":{"type":"string"},
+            "lua_filter":{"type":"string"},
+            "repo_root":{"type":"string"},
+            "pdf_name":{"type":"string","default":"main.pdf"},
+            "limit":{"type":"integer"}
+         }}}
     ])
 }
 
-fn dispatch(method: &str, id: &serde_json::Value, params: &serde_json::Value) -> serde_json::Value {
+fn dispatch(method: &str, _id: &serde_json::Value, params: &serde_json::Value) -> serde_json::Value {
     match method {
         "initialize" => json!({"protocolVersion":"2024-11-05","capabilities":{"tools":{"listChanged":false}},"serverInfo":{"name":"trios-mcp-rag","version":env!("CARGO_PKG_VERSION")}}),
         "notifications/initialized" => json!(null),
@@ -112,6 +178,7 @@ fn dispatch(method: &str, id: &serde_json::Value, params: &serde_json::Value) ->
                 "list_chapters" => tool_list(),
                 "forbidden_audit" => tool_audit(),
                 "build_cover" => tool_cover(),
+                "build_pdf" => tool_build_pdf(&args),
                 _ => Err(anyhow::anyhow!("Unknown tool: {}", name)),
             };
             res.unwrap_or_else(|e| json!({"content":[{"type":"text","text":e.to_string()}],"isError":true}))
@@ -120,10 +187,19 @@ fn dispatch(method: &str, id: &serde_json::Value, params: &serde_json::Value) ->
     }
 }
 
-fn main() -> anyhow::Result<()> {
-    tracing_subscriber::fmt()
-        .with_writer(io::stderr)
-        .init();
+fn run_build_pdf_cli(args: &[String]) -> anyhow::Result<()> {
+    let cfg = pipeline::parse_cli(args)?;
+    let report = if cfg.dry_run {
+        pipeline::check(&cfg)?
+    } else {
+        pipeline::build(&cfg, &pipeline::load_from_postgres)?
+    };
+    // Print the report to stdout as JSON. Never print the DSN itself.
+    println!("{}", serde_json::to_string_pretty(&report)?);
+    Ok(())
+}
+
+fn run_mcp_server() -> anyhow::Result<()> {
     eprintln!("trios-mcp-rag v{} — stdio JSON-RPC MCP server", env!("CARGO_PKG_VERSION"));
     let stdin = io::stdin();
     let mut stdout = io::stdout();
@@ -148,4 +224,27 @@ fn main() -> anyhow::Result<()> {
         stdout.flush()?;
     }
     Ok(())
+}
+
+fn main() -> anyhow::Result<()> {
+    tracing_subscriber::fmt()
+        .with_writer(io::stderr)
+        .init();
+    let argv: Vec<String> = std::env::args().collect();
+    match argv.get(1).map(|s| s.as_str()) {
+        Some("build-pdf") => run_build_pdf_cli(&argv[2..]),
+        Some("--help") | Some("-h") => {
+            eprintln!(
+                "trios-mcp-rag v{}\n\n\
+                 Default: run as MCP stdio server.\n\n\
+                 Subcommands:\n  \
+                   build-pdf [--dry-run] [--database-url-env NAME] [--chapters-table T]\n            \
+                             [--out-dir D] [--build-dir D] [--template P] [--lua-filter P]\n            \
+                             [--repo-root D] [--pdf-name N] [--limit N]\n",
+                env!("CARGO_PKG_VERSION")
+            );
+            Ok(())
+        }
+        _ => run_mcp_server(),
+    }
 }

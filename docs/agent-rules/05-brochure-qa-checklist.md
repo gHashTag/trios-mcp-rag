@@ -53,7 +53,49 @@ Spot-check by opening the PDF and scanning the first three chapter
 openers and the title page. If the build pipeline emits a style hash
 or template version, log it.
 
-## 4. Secret scan
+## 4. Hero-anchoring scan (no image trains)
+
+Goal: catch consecutive hero panels rendered without intervening
+substantive text — the "image train" / "hero gallery" failure mode.
+
+Per rule 02, every hero panel must be anchored to a nearby substantive
+heading and body text. No two heroes back-to-back without a meaningful
+text buffer.
+
+What to look for, page by page:
+
+- Pages that are dominated by a hero with little or no body text and
+  whose neighbour page is *also* a hero-dominant page.
+- Sequences where a chapter opener hero is immediately followed by a
+  near-duplicate "transition" heading that carries its own hero.
+- Headings whose body is effectively just the hero block (no
+  paragraphs of substantive prose underneath).
+
+Quick triage:
+
+- Use `pdfinfo` for the page count and walk pages with `pdftotext -f N
+  -l N generated/out/main.pdf -` to estimate text density per page.
+- Flag any page whose extracted text is below a small-prose threshold
+  (e.g. fewer than ~40 words) as an image-heavy / low-context
+  candidate, then check whether its neighbours are also low-context.
+- Two adjacent low-context, hero-dominant pages = image train. Fix at
+  the source: keep the hero on the substantive section, drop the
+  transition / duplicate hero.
+
+Acceptance: image-heavy / low-context candidate pages should be few
+and non-adjacent, and every remaining hero should have substantive
+text under it (not just a caption).
+
+Worked example (2026-05 audit): a prior build flagged 6 image-heavy /
+low-context candidate pages, several of them adjacent — symptoms of
+duplicate "transition" headings that carried hero blocks of their own.
+Removing 7 such transition hero blocks reduced the candidate count to
+2, the early hero sequence then had text under each hero, the revised
+PDF settled at 145 A4 pages and passed `qpdf --check`. Use this as a
+reference shape: candidate count should drop materially, adjacency
+should disappear, and `qpdf --check` must still pass after the edit.
+
+## 5. Secret scan
 
 Goal: catch DSNs, tokens, or passwords that leaked into the artefact
 or into the repo.
@@ -72,7 +114,7 @@ git grep -nE "postgres(ql)?://[^ ]+:[^ ]+@" -- ':!*.md' || echo "secret scan (tr
 Any hit is a hard blocker. Stop the publish, follow rule 03 §"If a
 secret is accidentally exposed".
 
-## 5. Language scan
+## 6. Language scan
 
 Goal: enforce the repo-facing language policy.
 
@@ -88,7 +130,7 @@ A non-zero Cyrillic count in a build intended for the public repo is a
 flag, not an automatic failure — confirm with the user before
 publishing.
 
-## 6. PDF structural validation
+## 7. PDF structural validation
 
 Goal: catch broken PDFs.
 
@@ -106,7 +148,7 @@ Expectations:
 - `pdftotext … | wc -w` is non-zero and roughly matches the SSOT's
   total `word_count` (allow ±10% for front matter, captions, etc).
 
-## 7. Build reproducibility note
+## 8. Build reproducibility note
 
 Record, in the build's change-log entry:
 

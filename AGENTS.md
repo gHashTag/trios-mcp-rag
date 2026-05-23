@@ -90,12 +90,17 @@ specific change** — defaults do not change without an explicit instruction.
    [docs/rag/trios-phd-canon.md](docs/rag/trios-phd-canon.md) and
    rule 02 for the canonical phrasing.
 9. **`GOLDEN_BRIDGE_COVER_CANON`** — the canonical cover is the
-   user-selected GPT Image 2 v3 style based on the previous TRIOS /
-   *Flos Aureus* cover: black velvet / chalkboard background, deep
-   antique gold calligraphic title, white chalk da-Vinci-style
-   formulas, three microchips as the central emblem, authors
-   `Dmitrii Vasilev · Stergios Pellis · Scott Olsen`, and a bottom
-   `TRINITY S3AI` ribbon. Do **not** rebuild it with generic code
+   user-selected **GPT Image 2 v1** style — visually the closest of
+   the GPT Image 2 candidates to the previous TRIOS / *Flos Aureus*
+   cover: black velvet / chalkboard background, deep antique gold
+   calligraphic `Golden Bridge` title, white chalk Leonardo-style
+   side formulas / diagrams, **three microchips labeled `PHI`,
+   `EULER`, `GAMMA` connected by gold circuitry** as the central
+   emblem, authors `Dmitrii Vasilev · Stergios Pellis · Scott Olsen`,
+   and a bottom `TRINITY S3AI` ribbon. The canonical artifact names
+   are `golden_bridge_gpt2_v1_canonical_6x9_print_cover.pdf` /
+   `.png` and `golden_bridge_gpt2_v1_canonical_6x9_bleed_cover.png`
+   — use them verbatim. Do **not** rebuild it with generic code
    (`DO_NOT_REBUILD_WITH_GENERIC_CODE`) — no CAD/vector UI cover, no
    ReportLab cover, no corporate brochure, no assembled flat layout —
    unless the user explicitly asks for that variant for the current

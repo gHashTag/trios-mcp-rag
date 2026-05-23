@@ -47,20 +47,26 @@ A cover asset (image file) enters this pipeline as the **first page**
 ## GOLDEN_BRIDGE_COVER_CANON
 
 The canonical TRIOS PhD / GOLDEN BRIDGE cover is the user-selected
-**GPT Image 2 v3** style, based on the previous TRIOS / *Flos Aureus*
-cover. Its visual identity is fixed:
+**GPT Image 2 v1** style — visually the closest of the GPT Image 2
+candidates to the previous TRIOS / *Flos Aureus* cover. Its visual
+identity is fixed:
 
 - **Background**: black velvet / chalkboard texture. Deep, matte black.
   Not glossy, not photographic, not corporate flat black.
-- **Title**: deep antique gold calligraphic title. Hand-drawn /
-  engraved-feeling letterforms, warm gold (not bright yellow, not
-  metallic-CGI gold).
-- **Annotations**: white chalk Leonardo da Vinci-style formulas and
-  diagrams scattered around the composition — geometric constructions,
-  ratios, hand-style mathematical marginalia.
+- **Title**: deep antique gold calligraphic `Golden Bridge`. Hand-drawn
+  / engraved-feeling letterforms, warm gold (not bright yellow, not
+  metallic-CGI gold). The title is rendered as the literal two-word
+  string `Golden Bridge`, not as `GOLDEN BRIDGE`, `Golden-Bridge`, or
+  any other variant.
+- **Side annotations**: white chalk Leonardo da Vinci-style formulas
+  and diagrams along the sides of the composition — geometric
+  constructions, ratios, hand-style mathematical marginalia. The
+  marginalia frame the central emblem rather than crowd it.
 - **Central emblem**: three microchips arranged as the central emblem
   (the "three strands" of the TRIOS S³AI compendium, rendered as
-  silicon).
+  silicon). The chips are **labeled `PHI`, `EULER`, `GAMMA`** and are
+  **connected by gold circuitry** traces that read as the bridge
+  between the three constants.
 - **Authors**: the byline reads
   `Dmitrii Vasilev · Stergios Pellis · Scott Olsen`
   in that order, using middle-dot separators.
@@ -106,7 +112,7 @@ similar vague aesthetic requests are **not** valid overrides. A valid
 override looks like:
 
 - "For this brochure only, use a white academic titlepage."
-- "Swap the cover to the alt v4 prompt I sent — just this build."
+- "Swap the cover to the GPT Image 2 v3 candidate for just this build."
 
 If the user has not said something that specific, keep the canonical
 cover.
@@ -184,21 +190,35 @@ and how it is rendered.
   repository-relative path. Recommended location:
 
   ```
-  assets/covers/golden-bridge/<version>/<image_id>.<ext>
+  assets/covers/golden-bridge/<version>/<artifact-name>
   ```
 
-  for example:
+  The **canonical artifact names** for the current
+  `GOLDEN_BRIDGE_COVER_CANON` (GPT Image 2 v1) build are exactly:
 
-  ```
-  assets/covers/golden-bridge/v27/cover-golden-bridge-gpt-image-2-v3.png
-  ```
+  - `golden_bridge_gpt2_v1_canonical_6x9_print_cover.pdf`
+    — print-ready 6×9" cover PDF (no bleed). The preferred handoff
+    into the canonical pipeline as page 1.
+  - `golden_bridge_gpt2_v1_canonical_6x9_print_cover.png`
+    — same artwork as a raster PNG at 6×9" trim, for previews,
+    template `\includegraphics` use, and QA diffs.
+  - `golden_bridge_gpt2_v1_canonical_6x9_bleed_cover.png`
+    — full-bleed 6×9" PNG variant for any wrap / KDP-style build that
+    needs bleed margins.
 
-- `<image_id>` MUST be a stable, kebab-case identifier (consistent
+  Use these names verbatim. Do not rename them between commits, do
+  not strip the `gpt2_v1_canonical` segment, and do not silently
+  substitute a re-generated bitmap under the same filename — the
+  filenames encode the canon, and `file_hash` (below) pins the
+  content.
+
+- The underlying `image_id` for the SSOT manifest is the stable
+  kebab-case form `cover-golden-bridge-gpt2-v1-canonical` (consistent
   with `docs/rag/IMAGE_PLACEMENT.md` § "SSOT image identity
-  contract"). The id encodes the cover lineage
-  (`cover-golden-bridge-gpt-image-2-v3`), not the prompt iteration
-  number — re-running the same canonical prompt does not change the
-  id; only a deliberate canon change does.
+  contract"). The id encodes the cover lineage, not the prompt
+  iteration number — re-running the same canonical prompt does not
+  change the id; only a deliberate canon change (e.g. a future move
+  to GPT Image 2 v4 or a new generator) does.
 - Large binary covers should follow whatever LFS / asset-store
   convention the repo uses at the time of the build. Do not commit
   multi-MB binaries casually; coordinate with the maintainer.
@@ -210,15 +230,15 @@ uses:
 
 | Field                   | Value (canonical cover)                                                   |
 |-------------------------|---------------------------------------------------------------------------|
-| `image_id`              | `cover-golden-bridge-gpt-image-2-v3` (or successor canonical id)          |
-| `role`                  | `cover`                                                                   |
-| `canonical_anchor`      | `front-cover` (or the equivalent title-page anchor used by the template)  |
-| `section_id`            | `front-cover`                                                             |
-| `priority`              | `0` (cover always wins its anchor)                                        |
-| `caption`               | empty (cover art is not captioned)                                        |
-| `source` / `path`       | repository-relative path under `assets/covers/golden-bridge/<version>/…`  |
-| `file_hash`             | sha256 of the binary asset                                                |
-| `allowed_repeat_policy` | `title_page_only`                                                         |
+| `image_id`              | `cover-golden-bridge-gpt2-v1-canonical` (or successor canonical id)                                                                  |
+| `role`                  | `cover`                                                                                                                              |
+| `canonical_anchor`      | `front-cover` (or the equivalent title-page anchor used by the template)                                                             |
+| `section_id`            | `front-cover`                                                                                                                        |
+| `priority`              | `0` (cover always wins its anchor)                                                                                                   |
+| `caption`               | empty (cover art is not captioned)                                                                                                   |
+| `source` / `path`       | repository-relative path to `golden_bridge_gpt2_v1_canonical_6x9_print_cover.pdf` (preferred) or its `.png` / bleed `.png` companion |
+| `file_hash`             | sha256 of the binary asset (per artifact name)                                                                                       |
+| `allowed_repeat_policy` | `title_page_only`                                                                                                                    |
 
 See `docs/rag/IMAGE_PLACEMENT.md` for the full identity contract; the
 table above is the cover-specific instantiation.
@@ -231,13 +251,21 @@ titlepage. Two acceptable mechanisms, in order of preference:
 
 1. **Template-driven cover page**: the LaTeX template
    (`chapter.template.tex`, or a thin wrapper) opens with a single
-   full-bleed `\includegraphics` of the cover asset on a dedicated
-   page, before `\maketitle` / any title block. The cover page has no
-   page number and no running header.
+   full-bleed cover page on a dedicated page, before `\maketitle` /
+   any title block. The cover page has no page number and no running
+   header. Use
+   `golden_bridge_gpt2_v1_canonical_6x9_print_cover.pdf` via
+   `\includepdf` (from `pdfpages`) for the no-bleed print build, or
+   `golden_bridge_gpt2_v1_canonical_6x9_print_cover.png` /
+   `golden_bridge_gpt2_v1_canonical_6x9_bleed_cover.png` via
+   `\includegraphics` when a raster handoff is required (the bleed
+   PNG is the right choice when the surrounding build expects bleed
+   margins; the print PNG / PDF when it does not).
 2. **Pandoc include-before**: if the template route is not feasible,
    use `pandoc --include-before-body=<cover.tex>` where `cover.tex`
-   contains the same `\includegraphics` block. This must still flow
-   through tectonic.
+   contains the same `\includepdf` / `\includegraphics` block,
+   referencing the same canonical artifact name. This must still
+   flow through tectonic.
 
 Either way:
 

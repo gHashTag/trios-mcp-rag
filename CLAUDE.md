@@ -17,12 +17,16 @@ Quick summary of the hard rules:
   High-risk / Retracted). No prize claims as deliverables.
 - Public repo content is English. Chat with the maintainer can be Russian.
 - Run the brochure QA checklist before declaring a build done.
-- Preserve the `GOLDEN_BRIDGE_COVER_CANON` (black velvet + antique
-  gold calligraphic title + white chalk da-Vinci formulas + three
-  microchips + `TRINITY S3AI` bottom ribbon). Do not regenerate the
-  cover with generic code (ReportLab, CAD/vector UI, corporate
-  brochure, assembled flat layout) without an explicit one-shot
-  request. See
+- Preserve the `GOLDEN_BRIDGE_COVER_CANON` — the user-selected GPT
+  Image 2 v1 cover (black velvet + antique gold calligraphic
+  `Golden Bridge` + white chalk da-Vinci-style side formulas + three
+  chips labeled `PHI` / `EULER` / `GAMMA` connected by gold circuitry
+  + `TRINITY S3AI` bottom ribbon). Canonical artifact names:
+  `golden_bridge_gpt2_v1_canonical_6x9_print_cover.pdf` / `.png` and
+  `golden_bridge_gpt2_v1_canonical_6x9_bleed_cover.png`. Do not
+  regenerate the cover with generic code (ReportLab, CAD/vector UI,
+  corporate brochure, assembled flat layout) without an explicit
+  one-shot request. See
   [docs/agent-rules/07-golden-bridge-cover.md](docs/agent-rules/07-golden-bridge-cover.md).
 
 See:

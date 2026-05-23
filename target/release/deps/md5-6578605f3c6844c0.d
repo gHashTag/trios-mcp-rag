@@ -1,0 +1,12 @@
+/private/tmp/trios-mcp-rag/target/release/deps/md5-6578605f3c6844c0.d: /Users/playom/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/md-5-0.11.0/src/lib.rs /Users/playom/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/md-5-0.11.0/src/block_api.rs /Users/playom/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/md-5-0.11.0/src/compress.rs /Users/playom/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/md-5-0.11.0/src/consts.rs /Users/playom/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/md-5-0.11.0/src/../README.md /Users/playom/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/md-5-0.11.0/src/compress/soft.rs
+
+/private/tmp/trios-mcp-rag/target/release/deps/libmd5-6578605f3c6844c0.rlib: /Users/playom/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/md-5-0.11.0/src/lib.rs /Users/playom/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/md-5-0.11.0/src/block_api.rs /Users/playom/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/md-5-0.11.0/src/compress.rs /Users/playom/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/md-5-0.11.0/src/consts.rs /Users/playom/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/md-5-0.11.0/src/../README.md /Users/playom/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/md-5-0.11.0/src/compress/soft.rs
+
+/private/tmp/trios-mcp-rag/target/release/deps/libmd5-6578605f3c6844c0.rmeta: /Users/playom/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/md-5-0.11.0/src/lib.rs /Users/playom/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/md-5-0.11.0/src/block_api.rs /Users/playom/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/md-5-0.11.0/src/compress.rs /Users/playom/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/md-5-0.11.0/src/consts.rs /Users/playom/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/md-5-0.11.0/src/../README.md /Users/playom/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/md-5-0.11.0/src/compress/soft.rs
+
+/Users/playom/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/md-5-0.11.0/src/lib.rs:
+/Users/playom/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/md-5-0.11.0/src/block_api.rs:
+/Users/playom/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/md-5-0.11.0/src/compress.rs:
+/Users/playom/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/md-5-0.11.0/src/consts.rs:
+/Users/playom/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/md-5-0.11.0/src/../README.md:
+/Users/playom/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/md-5-0.11.0/src/compress/soft.rs:

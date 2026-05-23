@@ -122,7 +122,6 @@ fn dispatch(method: &str, id: &serde_json::Value, params: &serde_json::Value) ->
 
 fn main() -> anyhow::Result<()> {
     tracing_subscriber::fmt()
-        .with_env_filter("trios_mcp_rag=info")
         .with_writer(io::stderr)
         .init();
     eprintln!("trios-mcp-rag v{} — stdio JSON-RPC MCP server", env!("CARGO_PKG_VERSION"));

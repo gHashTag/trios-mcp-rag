@@ -1,0 +1,11 @@
+/private/tmp/trios-mcp-rag/target/release/deps/postgres_types-5835a9a1fc211430.d: /Users/playom/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/postgres-types-0.2.13/src/lib.rs /Users/playom/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/postgres-types-0.2.13/src/pg_lsn.rs /Users/playom/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/postgres-types-0.2.13/src/private.rs /Users/playom/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/postgres-types-0.2.13/src/special.rs /Users/playom/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/postgres-types-0.2.13/src/type_gen.rs
+
+/private/tmp/trios-mcp-rag/target/release/deps/libpostgres_types-5835a9a1fc211430.rlib: /Users/playom/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/postgres-types-0.2.13/src/lib.rs /Users/playom/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/postgres-types-0.2.13/src/pg_lsn.rs /Users/playom/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/postgres-types-0.2.13/src/private.rs /Users/playom/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/postgres-types-0.2.13/src/special.rs /Users/playom/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/postgres-types-0.2.13/src/type_gen.rs
+
+/private/tmp/trios-mcp-rag/target/release/deps/libpostgres_types-5835a9a1fc211430.rmeta: /Users/playom/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/postgres-types-0.2.13/src/lib.rs /Users/playom/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/postgres-types-0.2.13/src/pg_lsn.rs /Users/playom/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/postgres-types-0.2.13/src/private.rs /Users/playom/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/postgres-types-0.2.13/src/special.rs /Users/playom/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/postgres-types-0.2.13/src/type_gen.rs
+
+/Users/playom/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/postgres-types-0.2.13/src/lib.rs:
+/Users/playom/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/postgres-types-0.2.13/src/pg_lsn.rs:
+/Users/playom/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/postgres-types-0.2.13/src/private.rs:
+/Users/playom/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/postgres-types-0.2.13/src/special.rs:
+/Users/playom/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/postgres-types-0.2.13/src/type_gen.rs:

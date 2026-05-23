@@ -78,6 +78,81 @@ fn tool_audit() -> anyhow::Result<Value> {
     Ok(json!({"content":[{"type":"text","text":msg}],"isError":false}))
 }
 
+/// MCP `list_rag_rules` tool.
+///
+/// Returns the durable RAG anchors that any agent driving this server
+/// must respect before rendering, editing the SSOT-derived artefacts,
+/// or shipping a PDF. The anchors are grep-friendly all-caps tokens
+/// that resolve into specific docs under `docs/rag/` and
+/// `docs/agent-rules/`. Future agents that grep for these tokens
+/// should land on the linked files.
+///
+/// This tool is read-only and contains no secret values.
+fn tool_list_rag_rules() -> anyhow::Result<Value> {
+    let rules = json!([
+        {
+            "anchor": "TRIOS_PHD_CANONICAL_PIPELINE",
+            "summary": "Rust trios-phd / TRIOS MCP -> Railway/Postgres SSOT (ssot_brochure.chapters or ssot.chapters) -> Markdown -> pandoc (chapter.template.tex, force-fullwidth-hero.lua) -> LaTeX -> tectonic -> PDF. The only supported renderer chain.",
+            "see": ["docs/rag/CANONICAL_PIPELINE.md", "docs/agent-rules/00-canonical-pipeline.md", "README.md"]
+        },
+        {
+            "anchor": "TRIOS_PHD_RENDERER_FIRST",
+            "summary": "Never edit the rendered PDF. Fix in the SSOT image manifest, then Markdown, then Lua filter, then LaTeX template, then src/pipeline.rs. A PDF patched by hand will be silently regenerated next build.",
+            "see": ["docs/rag/CANONICAL_PIPELINE.md", "docs/rag/IMAGE_PLACEMENT.md"]
+        },
+        {
+            "anchor": "TRIOS_PHD_STYLE_LOCK",
+            "summary": "Locked visual identity: serif typography, engraved black-and-white S3AI hero panels, standard book margins, large images. No corporate / teal / black covers except for the GOLDEN BRIDGE cover canon. No image trains; soft keep-together, never hard \\clearpage per section.",
+            "see": ["docs/rag/CANONICAL_PIPELINE.md", "docs/agent-rules/02-pdf-style.md", "docs/rag/trios-phd-canon.md"]
+        },
+        {
+            "anchor": "TRIOS_PHD_NO_GENERIC_PDF",
+            "summary": "No ReportLab / WeasyPrint / wkhtmltopdf / browser-print / online Markdown-to-PDF substitute, even temporarily. Missing pandoc or tectonic is a blocker, not a fallback trigger.",
+            "see": ["docs/rag/CANONICAL_PIPELINE.md", "docs/agent-rules/00-canonical-pipeline.md"]
+        },
+        {
+            "anchor": "TRIOS_PHD_SECRET_SAFETY",
+            "summary": "Never log, print, commit, or embed DSNs, Railway tokens, passwords, or any Railway-environment value. Reference by env-var name only. See .env.example for the safe placeholder template.",
+            "see": ["docs/rag/CANONICAL_PIPELINE.md", "docs/agent-rules/03-safety-railway-postgres.md", ".env.example"]
+        },
+        {
+            "anchor": "TRIOS_PHD_CLAIM_STATUS",
+            "summary": "Every empirical / theoretical statement carries one of: Verified, Empirical fit, Open conjecture, High-risk, Retracted. Default Open conjecture if unclear. No prize framing as deliverables.",
+            "see": ["docs/rag/CANONICAL_PIPELINE.md", "docs/agent-rules/04-claim-status.md"]
+        },
+        {
+            "anchor": "TRIOS_PHD_COVER_CANON",
+            "summary": "GOLDEN BRIDGE front cover: GPT Image 2 fully prompted v1, full-bleed A4 (no crop), black background, gold serif title, white Da Vinci-style formulas/diagrams, three chips PHI / EULER / GAMMA, authors Dmitrii Vasilev . Stergios Pellis . Scott Olsen. Do not crop, do not replace with a programmatic / generic LaTeX-only layout.",
+            "see": ["docs/rag/COVER_CANON.md"]
+        },
+        {
+            "anchor": "TRIOS_PHD_NO_IMAGE_TRAIN",
+            "summary": "Heroes must be semantically anchored to a substantive heading and body text. No two heroes back-to-back without a real prose buffer. Enforce with a soft keep-together rule, not a hard \\clearpage per section.",
+            "see": ["docs/rag/trios-phd-canon.md", "docs/agent-rules/02-pdf-style.md"]
+        },
+        {
+            "anchor": "TRIOS_PHD_IMAGE_PLACEMENT",
+            "summary": "SSOT image manifest contract: stable image_id, role, canonical_anchor, priority, caption, source, file_hash, allowed_repeat_policy. Deterministic placement rules; no orphan images.",
+            "see": ["docs/rag/IMAGE_PLACEMENT.md", "docs/rag/IMAGE_MANIFEST_SCHEMA.md"]
+        },
+        {
+            "anchor": "TRIOS_PHD_IMAGE_DEDUP",
+            "summary": "Duplicate image_id is an error. Duplicate file_hash / source / caption is a warning. Adjacent role repetition is an error. Allowed exceptions: title_page_only, watermark, reference_plate.",
+            "see": ["docs/rag/IMAGE_PLACEMENT.md", "docs/rag/PDF_QA_CHECKLIST.md"]
+        }
+    ]);
+    let body = json!({
+        "rules": rules,
+        "verification": "docs/rag/PIPELINE_VERIFICATION.md",
+        "env_template": ".env.example",
+        "agents_entrypoint": "AGENTS.md"
+    });
+    Ok(json!({
+        "content":[{"type":"text","text":serde_json::to_string_pretty(&body)?}],
+        "isError":false
+    }))
+}
+
 fn tool_cover() -> anyhow::Result<Value> {
     let rows = query_rows("SELECT count(*) AS n, sum(word_count) AS tw FROM ssot_brochure.chapters", &[])?;
     let n: i64 = rows[0].get::<_, i64>("n");
@@ -148,6 +223,8 @@ fn tools_def() -> Value {
          "inputSchema":{"type":"object","properties":{}}},
         {"name":"build_cover","description":"Generate LaTeX titlepage for GOLDEN BRIDGE v27",
          "inputSchema":{"type":"object","properties":{}}},
+        {"name":"list_rag_rules","description":"List the durable RAG anchors (TRIOS_PHD_*) that govern the canonical pipeline, style lock, cover canon, secret safety, and claim-status framing. Read this before rendering, editing chapters, or shipping a PDF.",
+         "inputSchema":{"type":"object","properties":{}}},
         {"name":"build_pdf","description":"Run the SSOT->Markdown->pandoc->tectonic->PDF pipeline. Defaults to dry_run=true (check env/deps/paths only). Set dry_run=false to actually build.",
          "inputSchema":{"type":"object","properties":{
             "dry_run":{"type":"boolean","default":true},
@@ -178,6 +255,7 @@ fn dispatch(method: &str, _id: &serde_json::Value, params: &serde_json::Value) -
                 "list_chapters" => tool_list(),
                 "forbidden_audit" => tool_audit(),
                 "build_cover" => tool_cover(),
+                "list_rag_rules" => tool_list_rag_rules(),
                 "build_pdf" => tool_build_pdf(&args),
                 _ => Err(anyhow::anyhow!("Unknown tool: {}", name)),
             };

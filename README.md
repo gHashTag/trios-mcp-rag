@@ -21,6 +21,7 @@ Exposes 5 tools that let AI agents (Claude Code, Cursor, Windsurf, opencode, etc
 | `forbidden_audit` | Scan all chapters for policy violations / prohibited terms |
 | `build_cover` | Generate LaTeX titlepage for the compendium |
 | `build_pdf` | Run the canonical SSOT → Markdown → pandoc → tectonic → PDF pipeline (dry-run by default) |
+| `list_rag_rules` | List the durable RAG anchors (`TRIOS_PHD_*`) that govern the pipeline, style lock, cover canon, secret safety, and claim-status framing |
 
 ## Prerequisites
 
@@ -309,11 +310,26 @@ No Python / ReportLab substitute is supported. The pandoc + tectonic
 path is the only renderer per the R1 / CROWN warning carried over from
 the parent `gHashTag/trios` repo.
 
-### Image placement & dedup rules (must-read for agents)
+### Image placement, pipeline anchors & dedup rules (must-read for agents)
 
 Before editing chapters, the image manifest, the Lua filter, the LaTeX
 template, or `src/pipeline.rs`, read the rules in [`docs/rag/`](docs/rag/):
 
+- [`docs/rag/CANONICAL_PIPELINE.md`](docs/rag/CANONICAL_PIPELINE.md) —
+  the six durable RAG anchors that govern the entire build. Grep
+  anchors: `TRIOS_PHD_CANONICAL_PIPELINE`, `TRIOS_PHD_RENDERER_FIRST`,
+  `TRIOS_PHD_STYLE_LOCK`, `TRIOS_PHD_NO_GENERIC_PDF`,
+  `TRIOS_PHD_SECRET_SAFETY`, `TRIOS_PHD_CLAIM_STATUS`.
+- [`docs/rag/COVER_CANON.md`](docs/rag/COVER_CANON.md) — GOLDEN BRIDGE
+  front cover invariants (GPT Image 2 v1, no-crop A4, black background,
+  gold title, white Da Vinci-style formulas / diagrams, three chips
+  PHI / EULER / GAMMA, authors Dmitrii Vasilev · Stergios Pellis ·
+  Scott Olsen). Anchors: `TRIOS_PHD_COVER_CANON`,
+  `GOLDEN_BRIDGE_COVER_V1`.
+- [`docs/rag/PIPELINE_VERIFICATION.md`](docs/rag/PIPELINE_VERIFICATION.md)
+  — copy-pasteable end-to-end Markdown → pandoc → LaTeX → tectonic →
+  PDF verification recipe (qpdf, pdfinfo, pdftotext, secret scan,
+  hero-anchoring scan).
 - [`docs/rag/IMAGE_PLACEMENT.md`](docs/rag/IMAGE_PLACEMENT.md) — single
   source of truth for image placement and deduplication. Grep anchors:
   `TRIOS_PHD_IMAGE_PLACEMENT`, `TRIOS_PHD_IMAGE_DEDUP`,
@@ -324,6 +340,11 @@ template, or `src/pipeline.rs`, read the rules in [`docs/rag/`](docs/rag/):
   `priority`, `caption`, `source`, `file_hash`, `allowed_repeat_policy`).
 - [`docs/rag/PDF_QA_CHECKLIST.md`](docs/rag/PDF_QA_CHECKLIST.md) —
   blocking checks to run before sharing or committing a generated PDF.
+
+A safe environment template lives at [`.env.example`](.env.example) —
+placeholder values only. Never commit real DSNs, tokens, or passwords.
+See `TRIOS_PHD_SECRET_SAFETY` in
+[`docs/rag/CANONICAL_PIPELINE.md`](docs/rag/CANONICAL_PIPELINE.md).
 
 If a PDF has duplicated or misplaced images, fix the SSOT / Markdown /
 Lua filter / LaTeX template — never the exported PDF. See

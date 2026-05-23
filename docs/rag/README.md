@@ -6,12 +6,19 @@ These docs are intentionally grep-friendly. Search for the all-caps anchors belo
 
 ## Documents
 
+- [`CANONICAL_PIPELINE.md`](./CANONICAL_PIPELINE.md) — durable RAG anchors for the whole pipeline.
+  Anchors: `TRIOS_PHD_CANONICAL_PIPELINE`, `TRIOS_PHD_RENDERER_FIRST`, `TRIOS_PHD_STYLE_LOCK`, `TRIOS_PHD_NO_GENERIC_PDF`, `TRIOS_PHD_SECRET_SAFETY`, `TRIOS_PHD_CLAIM_STATUS`.
+- [`COVER_CANON.md`](./COVER_CANON.md) — GOLDEN BRIDGE front cover invariants (GPT Image 2 v1, no-crop A4, black background, gold title, three chips PHI/EULER/GAMMA, authors Dmitrii Vasilev · Stergios Pellis · Scott Olsen).
+  Anchors: `TRIOS_PHD_STYLE_LOCK`, `TRIOS_PHD_RENDERER_FIRST`, `TRIOS_PHD_NO_GENERIC_PDF`, `TRIOS_PHD_COVER_CANON`, `GOLDEN_BRIDGE_COVER_V1`.
+- [`PIPELINE_VERIFICATION.md`](./PIPELINE_VERIFICATION.md) — copy-pasteable end-to-end Markdown → pandoc → LaTeX → tectonic → PDF verification recipe (qpdf, pdfinfo, pdftotext, secret scan, hero-anchoring scan).
+  Anchors: `TRIOS_PHD_CANONICAL_PIPELINE`, `TRIOS_PHD_RENDERER_FIRST`, `TRIOS_PHD_NO_GENERIC_PDF`, `TRIOS_PHD_SECRET_SAFETY`, `TRIOS_PHD_STYLE_LOCK`.
 - [`IMAGE_PLACEMENT.md`](./IMAGE_PLACEMENT.md) — single source of truth for image placement and deduplication.
   Anchors: `TRIOS_PHD_IMAGE_PLACEMENT`, `TRIOS_PHD_IMAGE_DEDUP`, `TRIOS_PHD_CANONICAL_PIPELINE`, `TRIOS_PHD_RENDERER_FIRST`, `TRIOS_PHD_STYLE_LOCK`.
 - [`IMAGE_MANIFEST_SCHEMA.md`](./IMAGE_MANIFEST_SCHEMA.md) — required fields for SSOT image rows that feed the renderer.
   Anchors: `TRIOS_PHD_IMAGE_PLACEMENT`, `TRIOS_PHD_IMAGE_DEDUP`.
 - [`PDF_QA_CHECKLIST.md`](./PDF_QA_CHECKLIST.md) — blocking checks to run before sharing or committing a generated PDF.
   Anchors: `TRIOS_PHD_CANONICAL_PIPELINE`, `TRIOS_PHD_RENDERER_FIRST`, `TRIOS_PHD_STYLE_LOCK`, `TRIOS_PHD_IMAGE_DEDUP`.
+- [`trios-phd-canon.md`](./trios-phd-canon.md) — canonical brochure invariants and the `TRIOS_PHD_NO_IMAGE_TRAIN` rule.
 
 ## How to use this directory
 

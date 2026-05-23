@@ -1,2 +1,8 @@
 /target
 /generated
+
+# Local environment — never commit real DSNs / tokens / passwords.
+# See .env.example for the safe placeholder template.
+.env
+.env.local
+.env.*.local

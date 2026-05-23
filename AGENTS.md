@@ -46,6 +46,24 @@ specific change** — defaults do not change without an explicit instruction.
 - [docs/rag/trios-phd-canon.md](docs/rag/trios-phd-canon.md)
   — Canonical TRIOS PhD invariants for RAG / agent retrieval, including
   the `TRIOS_PHD_NO_IMAGE_TRAIN` rule and the accepted PDF QA baseline.
+- [docs/rag/CANONICAL_PIPELINE.md](docs/rag/CANONICAL_PIPELINE.md)
+  — Durable RAG anchors that future agents must grep for:
+  `TRIOS_PHD_CANONICAL_PIPELINE`, `TRIOS_PHD_RENDERER_FIRST`,
+  `TRIOS_PHD_STYLE_LOCK`, `TRIOS_PHD_NO_GENERIC_PDF`,
+  `TRIOS_PHD_SECRET_SAFETY`, `TRIOS_PHD_CLAIM_STATUS`.
+- [docs/rag/COVER_CANON.md](docs/rag/COVER_CANON.md)
+  — GOLDEN BRIDGE front cover (GPT Image 2 v1, no-crop A4, black
+  background, gold title, white Da Vinci-style formulas/diagrams,
+  three chips PHI/EULER/GAMMA, authors Dmitrii Vasilev · Stergios
+  Pellis · Scott Olsen). Do not crop or substitute with a programmatic
+  layout.
+- [docs/rag/PIPELINE_VERIFICATION.md](docs/rag/PIPELINE_VERIFICATION.md)
+  — Copy-pasteable end-to-end Markdown → pandoc → LaTeX → tectonic →
+  PDF verification recipe (`qpdf`, `pdfinfo`, `pdftotext`, secret
+  scan, dedup scan, hero-anchoring scan).
+- [.env.example](.env.example)
+  — Safe placeholder template for `DATABASE_URL` / `RAILWAY_SSOT_URL`.
+  Never replace placeholders with real secrets in this file.
 - [docs/qa/brochure-pdf-checklist.md](docs/qa/brochure-pdf-checklist.md)
   — Operational pre-publish checklist with the current accepted numeric
   baseline (150 A4 pages, zero anomaly hits, one image-heavy candidate).

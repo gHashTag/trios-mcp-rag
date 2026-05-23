@@ -1,0 +1,60 @@
+# 02 — PDF / Brochure Visual Style
+
+The TRIOS PhD PDF has a specific visual identity. Agents must preserve
+it unless the user explicitly requests a one-shot variant.
+
+## Style defaults (the canonical look)
+
+- **Title page**: white background, academic PhD style. Serif title
+  block, no corporate banner, no full-bleed colour.
+- **Typography**: serif body. Default LaTeX book serif via the
+  `chapter.template.tex` template. Do not switch to a sans-serif body
+  font.
+- **Hero panels (chapter openers)**: black-and-white, engraved /
+  ornamental aesthetic for TRIOS S³AI artwork. Full-width via the
+  `force-fullwidth-hero.lua` filter.
+- **Margins**: standard academic book margins (the template's
+  defaults). Do not aggressively tighten them to fit more text.
+- **Images**: large, prominently placed. Do not down-scale to thumbnail
+  size to "look professional"; the visual character is part of the
+  thesis.
+- **Cover**: white academic title page is the default. **No teal
+  corporate cover** unless the user explicitly asks for one for that
+  build. **No black cover** unless the user explicitly asks for one
+  for that build.
+
+## What "explicit request" means
+
+A valid override looks like:
+
+- "For this brochure, use a black cover."
+- "Make the title page teal, just this once."
+- "Switch to a sans-serif body for the marketing one-pager."
+
+It does *not* include:
+
+- "Make it look more modern."
+- "Could you tidy up the design?"
+- "Polish the cover."
+
+Vague aesthetic requests do not override the defaults. Ask, or stay on
+the canonical style.
+
+## What to do if you find drift
+
+If you encounter a generated PDF that does not match this style — for
+example, a teal cover already committed, or a thumbnail-sized hero —
+treat it as drift, not as the new default. Flag it and rebuild via the
+canonical pipeline.
+
+## Things that are *not* style decisions
+
+These are correctness issues, not aesthetics:
+
+- Missing hero images on chapter openers → build bug, fix the pipeline
+  or the SSOT image references.
+- Garbled glyphs / tofu boxes → font / encoding bug, fix the template.
+- Lost section numbering → pandoc / template configuration bug.
+- Blank pages between chapters that were not requested → template bug.
+
+Don't paper over correctness issues with "style" tweaks.

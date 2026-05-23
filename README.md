@@ -4,6 +4,13 @@
 
 Exposes 5 tools that let AI agents (Claude Code, Cursor, Windsurf, opencode, etc.) search, read, and audit 80+ chapters of the Trinity S³AI compendium.
 
+> **AI agents and RAG runs:** read [AGENTS.md](AGENTS.md) before
+> generating PDFs, modifying the build pipeline, or touching the
+> Railway Postgres SSOT. The full rule set lives in
+> [`docs/agent-rules/`](docs/agent-rules/) and covers the canonical
+> pipeline, SSOT discipline, PDF style, write-safety, claim-status
+> framing, brochure QA, and language policy.
+
 ## Tools
 
 | Tool | Description |

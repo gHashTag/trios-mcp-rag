@@ -13,6 +13,7 @@ Exposes 5 tools that let AI agents (Claude Code, Cursor, Windsurf, opencode, etc
 | `list_chapters` | List all chapter slugs with metadata (kind, order, word count) |
 | `forbidden_audit` | Scan all chapters for policy violations / prohibited terms |
 | `build_cover` | Generate LaTeX titlepage for the compendium |
+| `build_pdf` | Run the canonical SSOT → Markdown → pandoc → tectonic → PDF pipeline (dry-run by default) |
 
 ## Prerequisites
 
@@ -272,6 +273,110 @@ For the chapter data, run the ingest pipeline from the main [trios](https://gith
 ```bash
 cargo run -p trios-phd -- ingest-rag-chunks
 ```
+
+## SSOT → PDF pipeline (`build_pdf` / `trios-mcp-rag build-pdf`)
+
+The canonical Trios PhD build path is exposed both as an MCP tool
+(`build_pdf`) and as a CLI subcommand (`trios-mcp-rag build-pdf …`):
+
+```
+Railway / Postgres SSOT
+        │  read-only (ssot_brochure.chapters or ssot.chapters)
+        ▼
+Markdown (generated/build/main.md)
+        │  pandoc  --template chapter.template.tex
+        │          --lua-filter force-fullwidth-hero.lua
+        ▼
+LaTeX   (generated/build/main.tex)
+        │  tectonic
+        ▼
+PDF     (generated/out/main.pdf)
+```
+
+### Dependencies
+
+- `pandoc` on PATH (tested with 3.x)
+- `tectonic` on PATH
+
+No Python / ReportLab substitute is supported. The pandoc + tectonic
+path is the only renderer per the R1 / CROWN warning carried over from
+the parent `gHashTag/trios` repo.
+
+### Environment
+
+- `DATABASE_URL` (or `RAILWAY_SSOT_URL` as a fallback) — Postgres DSN.
+  Connection strings are read from the environment by name only; no
+  secret value is logged, printed, or written to disk.
+- `--database-url-env NAME` changes which variable is consulted.
+
+### Production safety
+
+- The pipeline reads only. It never executes `INSERT`, `UPDATE`,
+  `DELETE`, or DDL against the SSOT.
+- No DSN value is hard-coded; passing `DATABASE_URL` on the command
+  line is not supported on purpose, to keep secrets out of shell
+  history.
+- `--dry-run` / `--check` validates env, dependencies, and template /
+  filter paths and counts chapters without producing any artefact.
+
+### CLI examples
+
+```bash
+# Dry-run: validate env, dependencies, paths, and table access.
+trios-mcp-rag build-pdf --dry-run \
+    --chapters-table ssot_brochure.chapters \
+    --template templates/chapter.template.tex \
+    --lua-filter filters/force-fullwidth-hero.lua \
+    --repo-root .
+
+# Full build into ./generated/out/main.pdf:
+trios-mcp-rag build-pdf \
+    --chapters-table ssot.chapters \
+    --template templates/chapter.template.tex \
+    --lua-filter filters/force-fullwidth-hero.lua \
+    --out-dir generated/out \
+    --build-dir generated/build
+
+# Smoke build with a small chapter cap:
+trios-mcp-rag build-pdf --limit 3
+```
+
+All flags: `--dry-run` / `--check`, `--database-url-env`,
+`--chapters-table`, `--out-dir`, `--build-dir`, `--template`,
+`--lua-filter`, `--repo-root`, `--pdf-name`, `--limit`.
+
+### MCP usage
+
+```jsonc
+// Dry-run from an MCP client:
+{"name":"build_pdf","arguments":{"dry_run":true}}
+
+// Full build:
+{"name":"build_pdf","arguments":{
+  "dry_run": false,
+  "chapters_table": "ssot_brochure.chapters",
+  "template": "templates/chapter.template.tex",
+  "lua_filter": "filters/force-fullwidth-hero.lua",
+  "out_dir": "generated/out",
+  "build_dir": "generated/build"
+}}
+```
+
+The MCP tool defaults to `dry_run=true` so that an agent calling
+`build_pdf` with no arguments only validates configuration.
+
+### Testing
+
+Unit tests cover markdown ordering, identifier validation, CLI parsing,
+and the dry-run path (no Postgres needed):
+
+```bash
+cargo test
+```
+
+Integration with a live Postgres requires `DATABASE_URL` (or
+`RAILWAY_SSOT_URL`) pointing at a non-production SSOT mirror and the
+`pandoc` + `tectonic` binaries on PATH.
 
 ## License
 

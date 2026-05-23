@@ -22,6 +22,16 @@ See:
 
 - [AGENTS.md](AGENTS.md) — full index of rules
 - [docs/agent-rules/](docs/agent-rules/) — normative rule files
+- [docs/rag/CANONICAL_PIPELINE.md](docs/rag/CANONICAL_PIPELINE.md) —
+  durable RAG anchors (`TRIOS_PHD_CANONICAL_PIPELINE`,
+  `TRIOS_PHD_RENDERER_FIRST`, `TRIOS_PHD_STYLE_LOCK`,
+  `TRIOS_PHD_NO_GENERIC_PDF`, `TRIOS_PHD_SECRET_SAFETY`,
+  `TRIOS_PHD_CLAIM_STATUS`)
+- [docs/rag/COVER_CANON.md](docs/rag/COVER_CANON.md) — GOLDEN BRIDGE
+  front cover canon
+- [docs/rag/PIPELINE_VERIFICATION.md](docs/rag/PIPELINE_VERIFICATION.md)
+  — end-to-end verification recipe
+- [.env.example](.env.example) — safe placeholder env template
 
 When a chat instruction conflicts with these rules, the rules win unless
 the user explicitly overrides them for the specific change in the same

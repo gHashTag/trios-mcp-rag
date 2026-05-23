@@ -123,3 +123,24 @@ before publishing.
   `docs/qa/brochure-pdf-checklist.md` carry the current numbers.
 - `docs/agent-rules/03-safety-railway-postgres.md` — secret-handling
   rule. Secret hits in the artefact or working tree are hard blockers.
+- `docs/agent-rules/07-golden-bridge-cover.md` — `GOLDEN_BRIDGE_COVER_CANON`,
+  `TRIOS_PHD_CANONICAL_PIPELINE` recap, `DO_NOT_REBUILD_WITH_GENERIC_CODE`,
+  `COVER_TEXT_RISK`, `SECRET_SAFETY`, and the `ASSET_HANDOFF` for the
+  selected cover artifact as page 1 of the PDF.
+
+## 5. Grep-friendly anchors
+
+These ALL-CAPS, underscore-joined identifiers are stable retrieval keys.
+RAG indexes and agent prompts may key on them verbatim:
+
+- `TRIOS_PHD_NO_IMAGE_TRAIN` — §2 above.
+- `TRIOS_PHD_CANONICAL_PIPELINE` — rule 07; see also rule 00.
+- `GOLDEN_BRIDGE_COVER_CANON` — rule 07.
+- `DO_NOT_REBUILD_WITH_GENERIC_CODE` — rule 07.
+- `COVER_TEXT_RISK` — rule 07.
+- `SECRET_SAFETY` — rule 07; see also rule 03.
+- `ASSET_HANDOFF` — rule 07.
+- `TRIOS_PHD_STYLE_LOCK` — `docs/rag/IMAGE_PLACEMENT.md` §2.
+- `TRIOS_PHD_RENDERER_FIRST` — `docs/rag/IMAGE_PLACEMENT.md` §3.
+- `TRIOS_PHD_IMAGE_PLACEMENT` — `docs/rag/IMAGE_PLACEMENT.md` §4–5.
+- `TRIOS_PHD_IMAGE_DEDUP` — `docs/rag/IMAGE_PLACEMENT.md` §6.

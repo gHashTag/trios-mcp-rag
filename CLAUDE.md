@@ -17,6 +17,13 @@ Quick summary of the hard rules:
   High-risk / Retracted). No prize claims as deliverables.
 - Public repo content is English. Chat with the maintainer can be Russian.
 - Run the brochure QA checklist before declaring a build done.
+- Preserve the `GOLDEN_BRIDGE_COVER_CANON` (black velvet + antique
+  gold calligraphic title + white chalk da-Vinci formulas + three
+  microchips + `TRINITY S3AI` bottom ribbon). Do not regenerate the
+  cover with generic code (ReportLab, CAD/vector UI, corporate
+  brochure, assembled flat layout) without an explicit one-shot
+  request. See
+  [docs/agent-rules/07-golden-bridge-cover.md](docs/agent-rules/07-golden-bridge-cover.md).
 
 See:
 

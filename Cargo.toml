@@ -1,0 +1,23 @@
+[package]
+name = "trios-mcp-rag"
+version = "0.2.0"
+edition = "2021"
+description = "MCP server: RAG over PostgreSQL (GOLDEN BRIDGE chapters)"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/gHashTag/trios-mcp-rag"
+readme = "README.md"
+keywords = ["mcp", "rag", "postgresql", "ai", "agent"]
+categories = ["database", "web-programming"]
+
+[[bin]]
+name = "trios-mcp-rag"
+path = "src/main.rs"
+
+[dependencies]
+tokio = { version = "1", features = ["full"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+anyhow = "1"
+tokio-postgres = "0.7"
+tracing = "0.1"
+tracing-subscriber = "0.3"

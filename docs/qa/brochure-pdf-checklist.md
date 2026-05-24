@@ -49,6 +49,13 @@ pdftotext -layout generated/out/main.pdf - | \
 
 **Accepted baseline: 0 hits.**
 
+> **Note for multi-chapter compendiums:** repeated bibliographic entries
+> (author names, DOI strings, arXiv IDs, URL fragments) across different
+> chapter reference lists are expected artifacts of the per-chapter
+> citation style. Exclude lines containing `zenodo`, `vixra`, `HAL`,
+> `NIST`, `physics.nist.gov`, `DOI`, or `/Constants/` from the scan.
+> Flag only prose paragraphs that repeat verbatim.
+
 ## 4. Duplicate numbered headings
 
 Goal: catch repeated numbered headings (e.g. two "3.2 …").

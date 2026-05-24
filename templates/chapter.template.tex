@@ -1,0 +1,105 @@
+\documentclass[11pt,a4paper,openany]{book}
+\raggedbottom
+\usepackage{fontspec}
+\setmainfont{latinmodern-math.otf}
+\newfontfamily\fallbackfont{lmroman12-regular.otf}
+\setmonofont{latinmodern-math.otf}[Scale=0.85]
+\usepackage{microtype}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{xurl}
+\usepackage{bookmark}
+\hypersetup{
+  pdftitle={GOLDEN BRIDGE --- Trinity S\textsuperscript{3}AI Compendium},
+  pdfauthor={Trinity S\textsuperscript{3}AI Research Group},
+  pdfsubject={φ-structured physical constants, unification, and cognitive architecture},
+  pdfkeywords={golden ratio, fine-structure constant, unification, physics, AI, Trinity S3AI},
+  bookmarksopen=true,
+  bookmarksopenlevel=1,
+  pdfstartview=FitH,
+  unicode=true
+}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{calc}
+\usepackage{float}
+\usepackage{tabularx}
+\usepackage{seqsplit}
+\usepackage{amsmath,amssymb}
+\usepackage{newunicodechar}
+\usepackage{silence}
+\WarningFilter{longtable}{Column widths have changed}
+\usepackage{etoolbox}
+\BeforeBeginEnvironment{longtable}{\footnotesize}
+\BeforeBeginEnvironment{verbatim}{\scriptsize}
+\AfterEndEnvironment{verbatim}{\normalsize}
+\newunicodechar{²}{\ensuremath{^2}}
+\newunicodechar{³}{\ensuremath{^3}}
+\newunicodechar{⁻}{\ensuremath{^-}}
+\newunicodechar{¹}{\ensuremath{^1}}
+\newunicodechar{⁴}{\ensuremath{^4}}
+\newunicodechar{⁵}{\ensuremath{^5}}
+\newunicodechar{ⁿ}{\ensuremath{^n}}
+\newunicodechar{ᵏ}{\ensuremath{^k}}
+\newunicodechar{₂}{\ensuremath{_2}}
+\newunicodechar{₆}{\ensuremath{_6}}
+\newunicodechar{₈}{\ensuremath{_8}}
+\newunicodechar{⁰}{\ensuremath{^0}}
+\newunicodechar{⁶}{\ensuremath{^6}}
+\newunicodechar{⁷}{\ensuremath{^7}}
+\newunicodechar{⁸}{\ensuremath{^8}}
+\newunicodechar{⁹}{\ensuremath{^9}}
+\newunicodechar{⁺}{\ensuremath{^+}}
+\newunicodechar{₀}{\ensuremath{_0}}
+\newunicodechar{₁}{\ensuremath{_1}}
+\newunicodechar{₃}{\ensuremath{_3}}
+\newunicodechar{₄}{\ensuremath{_4}}
+\newunicodechar{₅}{\ensuremath{_5}}
+\newunicodechar{₇}{\ensuremath{_7}}
+\newunicodechar{ʲ}{\ensuremath{^j}}
+\usepackage{amsfonts}
+\usepackage{tikz}
+\usepackage{enumitem}
+\setlist[itemize]{midpenalty=500}
+\setlist[enumerate]{midpenalty=500}
+\usepackage[defaultlines=2,all]{nowidow}
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setlength{\emergencystretch}{5em}
+\sloppy
+\hbadness=10000
+\vbadness=10000
+\setlength{\tabcolsep}{1pt}
+\setlength{\arraycolsep}{1pt}
+\makeatletter
+\def\pandocbounded#1{#1}
+% Suppress bold-italic font-shape substitution warning
+\DeclareFontShape{TU}{latinmodern-math.otf(0)}{b}{it}{<->ssub*latinmodern-math.otf(0)/b/n}{}
+\makeatother
+
+$if(title)$
+\title{$title$}
+$endif$
+$if(author)$
+\author{$for(author)$$author$$sep$ \and $endfor$}
+$endif$
+$if(date)$
+\date{$date$}
+$endif$
+
+\begin{document}
+\pagestyle{plain}
+
+$if(title)$
+\maketitle
+$endif$
+
+$if(toc)$
+\tableofcontents
+\clearpage
+$endif$
+
+$body$
+
+\end{document}

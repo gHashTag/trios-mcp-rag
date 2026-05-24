@@ -1,2 +1,5 @@
 /target
 /generated
+.env
+.env_raw
+

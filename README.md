@@ -11,6 +11,34 @@ Exposes 5 tools that let AI agents (Claude Code, Cursor, Windsurf, opencode, etc
 > pipeline, SSOT discipline, PDF style, write-safety, claim-status
 > framing, brochure QA, and language policy.
 
+---
+
+## Scientific Honesty Status Panel
+
+This repo serves the **Trinity S³AI** compendium. The project follows a
+verification-first discipline. Before citing any claim, check the
+evidence ledger:
+
+| Document | Purpose |
+|----------|---------|
+| [`docs/CORRECTED_GAP_ANALYSIS.md`](docs/CORRECTED_GAP_ANALYSIS.md) | Claim-by-claim mapping to repo evidence (file/theorem/PR/commit) |
+| [`docs/RETRACTED_OR_UNVERIFIED_CLAIMS.md`](docs/RETRACTED_OR_UNVERIFIED_CLAIMS.md) | Registry of withdrawn or hallucinated claims |
+| [`docs/NOBEL_LEVEL_RESEARCH_PROGRAM.md`](docs/NOBEL_LEVEL_RESEARCH_PROGRAM.md) | 5–10 year falsifiable research program (not a prize promise) |
+
+**Current snapshot (trinity-s3ai `main`, 2026-05-24):**
+- **1,762** machine-checked theorems (`Qed`/`Defined`)
+- **5** real `Admitted.` (all cited or tagged `[OPEN_PROBLEM]`)
+- **85** explicit Axioms/Conjectures/Parameters
+- **14** refutation theorems (`refuted`)
+- δ_CP = 3/φ² ≈ 65.66° **withdrawn** as physical prediction (PR #22, 5.6σ excluded)
+- Alleged δ_CP ≈ −105° **does not exist** in repo (prior-agent hallucination)
+
+**Rule:** No claim enters README, PDF, or public communication without a
+pointer to evidence or an explicit `unverified` label. See
+[`docs/agent-rules/04-claim-status.md`](docs/agent-rules/04-claim-status.md).
+
+---
+
 ## Tools
 
 | Tool | Description |
@@ -21,6 +49,12 @@ Exposes 5 tools that let AI agents (Claude Code, Cursor, Windsurf, opencode, etc
 | `forbidden_audit` | Scan all chapters for policy violations / prohibited terms |
 | `build_cover` | Generate LaTeX titlepage for the compendium |
 | `build_pdf` | Run the canonical SSOT → Markdown → pandoc → tectonic → PDF pipeline (dry-run by default) |
+| `get_claim_status` | Search chapters for claim-status markers (Verified, Empirical fit, Open conjecture, High-risk, Falsified, Retracted, Unverified) |
+| `list_claims` | Scan all chapters for claim-status vocabulary and return per-chapter summary |
+| `get_honest_counters` | Return the corrected, audited snapshot of trinity-s3ai formal proof counters |
+| `build_book` | Extended PDF pipeline with book-mode (TOC, chapter-level structure, dry-run by default) |
+| `preview_chapter_update` | **Dry-run only.** Show SQL diff and word-count change for a proposed chapter update |
+| `backup_ssot` | Create a timestamped backup table. Requires `confirm=true`; returns dry-run SQL otherwise |
 
 ## Prerequisites
 
@@ -412,5 +446,6 @@ MIT OR Apache-2.0
 ## Links
 
 - Main repo: [github.com/gHashTag/trios](https://github.com/gHashTag/trios)
+- Trinity S³AI (formalization): [github.com/gHashTag/trinity-s3ai](https://github.com/gHashTag/trinity-s3ai)
 - DOI: [10.5281/zenodo.19227877](https://doi.org/10.5281/zenodo.19227877)
 - MCP specification: [modelcontextprotocol.io](https://modelcontextprotocol.io)

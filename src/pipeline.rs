@@ -25,6 +25,7 @@ pub struct Chapter {
     pub order_key: i32,
     pub title: String,
     pub body_md: String,
+    pub illustration_url: Option<String>,
 }
 
 /// Configuration for one build.
@@ -55,6 +56,8 @@ pub struct BuildConfig {
     pub limit: Option<usize>,
     /// Output PDF filename (under `out_dir`). Defaults to `main.pdf`.
     pub pdf_name: String,
+    /// Book mode: add TOC, part dividers, and chapter-level LaTeX structure.
+    pub book_mode: bool,
 }
 
 impl Default for BuildConfig {
@@ -71,6 +74,7 @@ impl Default for BuildConfig {
             dry_run: false,
             limit: None,
             pdf_name: "main.pdf".into(),
+            book_mode: true,
         }
     }
 }
@@ -91,6 +95,7 @@ pub struct BuildReport {
     pub tex_path: Option<PathBuf>,
     pub pdf_path: Option<PathBuf>,
     pub notes: Vec<String>,
+    pub book_mode: bool,
 }
 
 /// Resolve the DSN strictly from the environment.
@@ -126,10 +131,7 @@ pub fn validate_table_ident(t: &str) -> Result<()> {
         if part.is_empty() {
             return Err(anyhow!("chapters_table has empty segment: {}", t));
         }
-        if !part
-            .chars()
-            .all(|c| c.is_ascii_alphanumeric() || c == '_')
-        {
+        if !part.chars().all(|c| c.is_ascii_alphanumeric() || c == '_') {
             return Err(anyhow!(
                 "chapters_table segment {:?} is not a plain identifier",
                 part
@@ -154,8 +156,27 @@ pub fn render_markdown(chapters: &[Chapter]) -> String {
             out.push_str("\n\n");
         }
         out.push_str(&format!("<!-- chapter: {} -->\n", ch.slug));
-        out.push_str(&format!("# {}\n\n", ch.title));
-        out.push_str(ch.body_md.trim_end());
+        let body = ch.body_md.trim_start();
+        if body.starts_with("# ") {
+            // Split after the first H1, insert hero between heading and body
+            let mut parts = body.splitn(2, '\n');
+            let h1 = parts.next().unwrap_or("");
+            let rest = parts.next().unwrap_or("").trim_start();
+            out.push_str(h1);
+            out.push_str("\n\n");
+            if let Some(img) = &ch.illustration_url {
+                out.push_str(&format!("![{}](img/{}){{.hero}}\n\n", ch.title, img));
+            }
+            if !rest.is_empty() {
+                out.push_str(rest);
+            }
+        } else {
+            out.push_str(&format!("# {}\n\n", ch.title));
+            if let Some(img) = &ch.illustration_url {
+                out.push_str(&format!("![{}](img/{}){{.hero}}\n\n", ch.title, img));
+            }
+            out.push_str(ch.body_md.trim_end());
+        }
         out.push('\n');
     }
     out
@@ -174,6 +195,30 @@ fn binary_available(name: &str) -> bool {
 
 fn ensure_dir(p: &Path) -> Result<()> {
     std::fs::create_dir_all(p).with_context(|| format!("create_dir_all({})", p.display()))
+}
+
+fn hex_decode(s: &str) -> Result<Vec<u8>> {
+    let s = s.strip_prefix("\\x").unwrap_or(s);
+    let mut bytes = Vec::with_capacity(s.len() / 2);
+    for i in (0..s.len()).step_by(2) {
+        let byte = u8::from_str_radix(&s[i..i + 2], 16)
+            .with_context(|| format!("invalid hex at position {}", i))?;
+        bytes.push(byte);
+    }
+    Ok(bytes)
+}
+
+fn is_png_valid(path: &std::path::Path) -> bool {
+    use std::io::Read;
+    let mut file = match std::fs::File::open(path) {
+        Ok(f) => f,
+        Err(_) => return false,
+    };
+    let mut magic = [0u8; 8];
+    if file.read_exact(&mut magic).is_err() {
+        return false;
+    }
+    &magic == b"\x89PNG\r\n\x1a\n"
 }
 
 /// Resolve an optional path relative to `repo_root` if it isn't absolute.
@@ -198,7 +243,10 @@ pub fn load_from_postgres(cfg: &BuildConfig) -> Result<Vec<Chapter>> {
     let dsn = resolve_dsn(cfg)?;
     let table = cfg.chapters_table.clone();
     let limit = cfg.limit;
-    let rt = tokio::runtime::Runtime::new()?;
+    let rt = tokio::runtime::Builder::new_multi_thread()
+        .worker_threads(1)
+        .enable_all()
+        .build()?;
     rt.block_on(async move {
         let (client, conn) = tokio_postgres::connect(&dsn, tokio_postgres::NoTls)
             .await
@@ -207,14 +255,20 @@ pub fn load_from_postgres(cfg: &BuildConfig) -> Result<Vec<Chapter>> {
             let _ = conn.await;
         });
         let mut sql = format!(
-            "SELECT slug, kind, order_key, title, body_md \
+            "SELECT slug, kind, order_key, title, body_md, illustration_url \
              FROM {} ORDER BY order_key",
             table
         );
         if let Some(n) = limit {
             sql.push_str(&format!(" LIMIT {}", n as i64));
         }
-        let rows = client.query(&sql, &[]).await.context("query chapters")?;
+        let rows = tokio::time::timeout(
+        std::time::Duration::from_secs(30),
+        client.query(&sql, &[]),
+    )
+    .await
+    .context("query chapters timed out (30s)")?
+    .context("query chapters")?;
         let chapters: Vec<Chapter> = rows
             .iter()
             .map(|r| Chapter {
@@ -223,6 +277,7 @@ pub fn load_from_postgres(cfg: &BuildConfig) -> Result<Vec<Chapter>> {
                 order_key: r.get::<_, i32>("order_key"),
                 title: r.get::<_, String>("title"),
                 body_md: r.get::<_, String>("body_md"),
+                illustration_url: r.get::<_, Option<String>>("illustration_url"),
             })
             .collect();
         Ok::<_, anyhow::Error>(chapters)
@@ -235,7 +290,10 @@ pub fn count_chapters(cfg: &BuildConfig) -> Result<usize> {
     validate_table_ident(&cfg.chapters_table)?;
     let dsn = resolve_dsn(cfg)?;
     let table = cfg.chapters_table.clone();
-    let rt = tokio::runtime::Runtime::new()?;
+    let rt = tokio::runtime::Builder::new_multi_thread()
+        .worker_threads(1)
+        .enable_all()
+        .build()?;
     rt.block_on(async move {
         let (client, conn) = tokio_postgres::connect(&dsn, tokio_postgres::NoTls)
             .await
@@ -244,7 +302,10 @@ pub fn count_chapters(cfg: &BuildConfig) -> Result<usize> {
             let _ = conn.await;
         });
         let sql = format!("SELECT count(*) AS n FROM {}", table);
-        let row = client.query_one(&sql, &[]).await.context("count chapters")?;
+        let row = client
+            .query_one(&sql, &[])
+            .await
+            .context("count chapters")?;
         let n: i64 = row.get::<_, i64>("n");
         Ok::<_, anyhow::Error>(n as usize)
     })
@@ -315,6 +376,7 @@ pub fn check(cfg: &BuildConfig) -> Result<BuildReport> {
         tex_path: None,
         pdf_path: None,
         notes,
+        book_mode: cfg.book_mode,
     })
 }
 
@@ -338,17 +400,73 @@ pub fn build(cfg: &BuildConfig, loader: &ChapterLoader) -> Result<BuildReport> {
     ensure_dir(&cfg.build_dir)?;
     ensure_dir(&cfg.out_dir)?;
 
+    eprintln!("[build] loading chapters...");
     let chapters = loader(cfg)?;
     if chapters.is_empty() {
-        return Err(anyhow!(
-            "no chapters returned from {}",
-            cfg.chapters_table
-        ));
+        return Err(anyhow!("no chapters returned from {}", cfg.chapters_table));
     }
+    eprintln!("[build] loaded {} chapters", chapters.len());
+
+    eprintln!("[build] extracting assets...");
+    let img_dir = cfg.build_dir.join("img");
+    ensure_dir(&img_dir)?;
+    let needed: Vec<&str> = chapters
+        .iter()
+        .filter_map(|c| c.illustration_url.as_deref())
+        .collect();
+    let missing: Vec<&str> = needed
+        .iter()
+        .cloned()
+        .filter(|name| {
+            let path = img_dir.join(name);
+            !path.exists() || !is_png_valid(&path)
+        })
+        .collect();
+    if !missing.is_empty() {
+        eprintln!("[build] downloading {} missing assets from Postgres...", missing.len());
+        let dsn = resolve_dsn(cfg)?;
+        let rt = tokio::runtime::Builder::new_multi_thread()
+            .worker_threads(1)
+            .enable_all()
+            .build()?;
+        rt.block_on(async {
+            let (client, conn) = tokio_postgres::connect(&dsn, tokio_postgres::NoTls)
+                .await
+                .context("postgres connect for assets")?;
+            tokio::spawn(async move {
+                let _ = conn.await;
+            });
+            let rows = tokio::time::timeout(
+                std::time::Duration::from_secs(30),
+                client.query(
+                    "SELECT name, bytes::text AS bytes_hex FROM ssot_brochure.assets WHERE name = ANY($1)",
+                    &[&missing],
+                ),
+            )
+            .await
+            .context("query assets timed out (30s)")?
+            .context("query assets")?;
+            for r in &rows {
+                let name: String = r.get("name");
+                let hex_str: String = r.get("bytes_hex");
+                let bytes = hex_decode(&hex_str)
+                    .with_context(|| format!("decode asset {}", name))?;
+                let path = img_dir.join(&name);
+                std::fs::write(&path, &bytes)
+                    .with_context(|| format!("write asset {}", path.display()))?;
+            }
+            Ok::<_, anyhow::Error>(())
+        })?;
+    } else {
+        eprintln!("[build] all {} assets already present", needed.len());
+    }
+
+    eprintln!("[build] rendering markdown...");
     let md = render_markdown(&chapters);
     let md_path = cfg.build_dir.join("main.md");
     std::fs::write(&md_path, &md).with_context(|| format!("write {}", md_path.display()))?;
 
+    eprintln!("[build] running pandoc...");
     let tex_path = cfg.build_dir.join("main.tex");
     let pdf_path = cfg.out_dir.join(&cfg.pdf_name);
 
@@ -369,30 +487,75 @@ pub fn build(cfg: &BuildConfig, loader: &ChapterLoader) -> Result<BuildReport> {
         }
         pandoc.arg("--lua-filter").arg(f);
     }
+    if cfg.book_mode {
+        pandoc.arg("--toc");
+        pandoc.arg("--top-level-division=chapter");
+    }
     let status = pandoc.status().context("spawn pandoc")?;
     if !status.success() {
         return Err(anyhow!("pandoc failed: exit {:?}", status.code()));
     }
 
-    let status = Command::new("tectonic")
+    // Post-process LaTeX: fix pandoc math-escaping issues where `$` was
+    // backslash-escaped because raw_tex inline elements broke delimiter
+    // recognition (e.g. `\texttt{...}$` or `$\sim$1`).
+    let tex_content = std::fs::read_to_string(&tex_path)
+        .with_context(|| format!("read generated tex: {}", tex_path.display()))?;
+    let tex_fixed = tex_content
+        .replace("\\\\$\\\\sim\\\\$", "\\(\\sim\\)")
+        .replace("\\$\\sim\\$", "\\(\\sim\\)")
+        .replace("\\\\texttt{0x47C0}\\\\$", "\\texttt{0x47C0}")
+        .replace("\\texttt{0x47C0}\\$", "\\texttt{0x47C0}")
+        .replace("\\setlength{\\tabcolsep}{4pt}", "\\setlength{\\tabcolsep}{1pt}");
+    if tex_fixed != tex_content {
+        std::fs::write(&tex_path, tex_fixed)
+            .with_context(|| format!("write fixed tex: {}", tex_path.display()))?;
+    }
+
+    let tectonic_stdout = cfg.build_dir.join("tectonic.stdout.log");
+    let tectonic_stderr = cfg.build_dir.join("tectonic.stderr.log");
+    eprintln!("[build] running tectonic...");
+    let output = Command::new("tectonic")
         .arg("-X")
         .arg("compile")
         .arg(&tex_path)
         .arg("--outdir")
         .arg(&cfg.out_dir)
-        .status()
+        .stdout(std::process::Stdio::piped())
+        .stderr(std::process::Stdio::piped())
+        .output()
         .context("spawn tectonic")?;
-    if !status.success() {
-        return Err(anyhow!("tectonic failed: exit {:?}", status.code()));
+    std::fs::write(&tectonic_stdout, &output.stdout).ok();
+    std::fs::write(&tectonic_stderr, &output.stderr).ok();
+    if !output.status.success() {
+        return Err(anyhow!("tectonic failed: exit {:?}", output.status.code()));
     }
 
+    // Optimize PDF images via qpdf if available
+    let tectonic_pdf = cfg.out_dir.join("main.pdf");
+    if binary_available("qpdf") {
+        eprintln!("[build] optimizing PDF images...");
+        let opt_pdf = cfg.out_dir.join("main-optimized.pdf");
+        let status = Command::new("qpdf")
+            .arg("--optimize-images")
+            .arg(&tectonic_pdf)
+            .arg(&opt_pdf)
+            .status();
+        if let Ok(st) = status {
+            if st.success() && opt_pdf.exists() {
+                let _ = std::fs::rename(&opt_pdf, &tectonic_pdf);
+            }
+        }
+    }
+
+    eprintln!("[build] renaming output...");
     // tectonic writes `<stem>.pdf` next to the input by default with
     // `--outdir`; rename to the configured filename if needed.
-    let tectonic_pdf = cfg.out_dir.join("main.pdf");
     if cfg.pdf_name != "main.pdf" && tectonic_pdf.exists() {
         std::fs::rename(&tectonic_pdf, &pdf_path)
             .with_context(|| format!("rename to {}", pdf_path.display()))?;
     }
+    eprintln!("[build] done");
 
     Ok(BuildReport {
         dry_run: false,
@@ -408,11 +571,13 @@ pub fn build(cfg: &BuildConfig, loader: &ChapterLoader) -> Result<BuildReport> {
         tex_path: Some(tex_path),
         pdf_path: Some(pdf_path),
         notes: Vec::new(),
+        book_mode: cfg.book_mode,
     })
 }
 
 /// Parse CLI args of the form `--key value` / `--flag` into a BuildConfig.
 /// Unknown keys produce an error so typos don't silently no-op.
+#[allow(dead_code)]
 pub fn parse_cli(args: &[String]) -> Result<BuildConfig> {
     let mut cfg = BuildConfig::default();
     let mut i = 0;
@@ -439,31 +604,36 @@ pub fn parse_cli(args: &[String]) -> Result<BuildConfig> {
             }
             "--out-dir" => {
                 cfg.out_dir = PathBuf::from(
-                    args.get(i + 1).ok_or_else(|| anyhow!("--out-dir needs a value"))?,
+                    args.get(i + 1)
+                        .ok_or_else(|| anyhow!("--out-dir needs a value"))?,
                 );
                 i += 2;
             }
             "--build-dir" => {
                 cfg.build_dir = PathBuf::from(
-                    args.get(i + 1).ok_or_else(|| anyhow!("--build-dir needs a value"))?,
+                    args.get(i + 1)
+                        .ok_or_else(|| anyhow!("--build-dir needs a value"))?,
                 );
                 i += 2;
             }
             "--template" => {
                 cfg.template = Some(PathBuf::from(
-                    args.get(i + 1).ok_or_else(|| anyhow!("--template needs a value"))?,
+                    args.get(i + 1)
+                        .ok_or_else(|| anyhow!("--template needs a value"))?,
                 ));
                 i += 2;
             }
             "--lua-filter" => {
                 cfg.lua_filter = Some(PathBuf::from(
-                    args.get(i + 1).ok_or_else(|| anyhow!("--lua-filter needs a value"))?,
+                    args.get(i + 1)
+                        .ok_or_else(|| anyhow!("--lua-filter needs a value"))?,
                 ));
                 i += 2;
             }
             "--repo-root" => {
                 cfg.repo_root = PathBuf::from(
-                    args.get(i + 1).ok_or_else(|| anyhow!("--repo-root needs a value"))?,
+                    args.get(i + 1)
+                        .ok_or_else(|| anyhow!("--repo-root needs a value"))?,
                 );
                 i += 2;
             }
@@ -483,6 +653,10 @@ pub fn parse_cli(args: &[String]) -> Result<BuildConfig> {
                 cfg.limit = Some(v);
                 i += 2;
             }
+            "--book-mode" => {
+                cfg.book_mode = true;
+                i += 1;
+            }
             other => return Err(anyhow!("unknown build-pdf arg: {}", other)),
         }
     }
@@ -500,6 +674,7 @@ mod tests {
             order_key: order,
             title: title.into(),
             body_md: body.into(),
+            illustration_url: None,
         }
     }
 
@@ -519,10 +694,7 @@ mod tests {
 
     #[test]
     fn markdown_breaks_ties_by_slug() {
-        let input = vec![
-            ch(10, "b", "Bee", "body"),
-            ch(10, "a", "Aye", "body"),
-        ];
+        let input = vec![ch(10, "b", "Bee", "body"), ch(10, "a", "Aye", "body")];
         let md = render_markdown(&input);
         assert!(md.find("Aye").unwrap() < md.find("Bee").unwrap());
     }
@@ -584,6 +756,7 @@ mod tests {
             "5",
             "--pdf-name",
             "phd.pdf",
+            "--book-mode",
         ]
         .iter()
         .map(|s| s.to_string())
@@ -604,6 +777,7 @@ mod tests {
         assert_eq!(cfg.chapters_table, "ssot.chapters");
         assert_eq!(cfg.limit, Some(5));
         assert_eq!(cfg.pdf_name, "phd.pdf");
+        assert!(cfg.book_mode);
     }
 
     #[test]

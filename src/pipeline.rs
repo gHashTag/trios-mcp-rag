@@ -962,6 +962,27 @@ pub fn build(cfg: &BuildConfig, loader: &ChapterLoader) -> Result<BuildReport> {
         std::fs::rename(&tectonic_pdf, &pdf_path)
             .with_context(|| format!("rename to {}", pdf_path.display()))?;
     }
+
+    // Merge cover.pdf if it exists (produced by a prior build_cover call).
+    let cover_pdf = cfg.build_dir.join("cover.pdf");
+    if cover_pdf.exists() && binary_available("qpdf") {
+        eprintln!("[build] merging cover.pdf...");
+        let merged = cfg.out_dir.join("main-merged.pdf");
+        let status = Command::new("qpdf")
+            .arg("--empty")
+            .arg("--pages")
+            .arg(&cover_pdf)
+            .arg(&pdf_path)
+            .arg("--")
+            .arg(&merged)
+            .status();
+        if let Ok(st) = status {
+            if st.success() && merged.exists() {
+                let _ = std::fs::rename(&merged, &pdf_path);
+            }
+        }
+    }
+
     eprintln!("[build] done");
 
     Ok(BuildReport {

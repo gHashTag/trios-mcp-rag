@@ -794,6 +794,39 @@ pub fn build(cfg: &BuildConfig, loader: &ChapterLoader) -> Result<BuildReport> {
     ensure_dir(&cfg.build_dir)?;
     ensure_dir(&cfg.out_dir)?;
 
+    // Auto-build cover from the canonical GPT-2 raster image if present.
+    let gpt2_cover = cfg.repo_root.join("assets").join("covers").join("golden-chain-gpt2-cover.png");
+    if gpt2_cover.exists() {
+        eprintln!("[build] compiling GPT-2 cover page...");
+        let copied = cfg.build_dir.join("cover-input.png");
+        let _ = std::fs::copy(&gpt2_cover, &copied);
+        let cover_tex = cfg.build_dir.join("cover.tex");
+        let tex = r#"\documentclass[a4paper,11pt]{article}
+\usepackage[a4paper,margin=0pt]{geometry}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\pagestyle{empty}
+\pagecolor{black}
+\begin{document}
+\noindent\makebox[\paperwidth][c]{%
+  \includegraphics[height=\paperheight,keepaspectratio]{cover-input.png}%
+}
+\end{document}
+"#
+        .to_string();
+        std::fs::write(&cover_tex, tex).ok();
+        let _ = Command::new("tectonic")
+            .current_dir(&cfg.build_dir)
+            .arg("-X")
+            .arg("compile")
+            .arg("cover.tex")
+            .arg("--outdir")
+            .arg(".")
+            .stdout(std::process::Stdio::null())
+            .stderr(std::process::Stdio::null())
+            .status();
+    }
+
     eprintln!("[build] loading chapters...");
     let chapters = loader(cfg)?;
     if chapters.is_empty() {

@@ -147,6 +147,85 @@ pub fn validate_table_ident(t: &str) -> Result<()> {
     Ok(())
 }
 
+/// Remove a leading `# Title` line from a chapter body so that when the
+/// chapter is merged as a subsection the duplicate heading does not create
+/// an unwanted H1 inside the host chapter.
+fn strip_leading_h1(body: &str) -> String {
+    let trimmed = body.trim_start();
+    if trimmed.starts_with("# ") {
+        if let Some(idx) = trimmed.find('\n') {
+            trimmed[idx + 1..].trim_start().to_string()
+        } else {
+            String::new()
+        }
+    } else {
+        trimmed.to_string()
+    }
+}
+
+/// Merge consecutive short chapters (< 30 lines of body) into their
+/// neighbours.  The `book` class inserts a `\clearpage` before every
+/// `\chapter`, so each stub that is only a title + a paragraph wastes nearly
+/// a full page.  By prepending short stubs to the next chapter (or appending
+/// to the previous when there is no next) we turn them into `##` sections
+/// inside a larger chapter, eliminating the forced page break.
+///
+/// A merged-in chapter’s hero image is downgraded to `{.secondary}` so it
+/// does not create a chapter-opener hero on its own page.
+fn merge_short_chapters(ordered: Vec<&Chapter>) -> Vec<Chapter> {
+    let mut merged: Vec<Chapter> = Vec::new();
+    let mut i = 0;
+    while i < ordered.len() {
+        let current = ordered[i].clone();
+        let lines = current.body_md.lines().count();
+        let is_appendix_like = current.kind.starts_with("appx")
+            || current.kind == "hardware_addendum"
+            || current.kind == "paper3";
+        // Short appendix-like chapter with a successor → prepend into the next chapter.
+        if is_appendix_like && lines < 30 && i + 1 < ordered.len() {
+            let mut next = ordered[i + 1].clone();
+            let subsection = format!(
+                "\n\n## {}\n\n{}",
+                current.title,
+                strip_leading_h1(&current.body_md)
+            );
+            next.body_md = format!("{}\n{}", next.body_md.trim_end(), subsection);
+            if let Some(img) = &current.illustration_url {
+                next.body_md.push_str(&format!(
+                    "\n\n![{}](img/{}){{.secondary}}\n\n",
+                    current.title, img
+                ));
+            }
+            next.secondary_images.extend(current.secondary_images.clone());
+            merged.push(next);
+            i += 2;
+            continue;
+        }
+        // Short appendix-like chapter at the end (or after a merge gap) → append to previous.
+        if is_appendix_like && lines < 30 && !merged.is_empty() {
+            let prev = merged.last_mut().unwrap();
+            let subsection = format!(
+                "\n\n## {}\n\n{}",
+                current.title,
+                strip_leading_h1(&current.body_md)
+            );
+            prev.body_md.push_str(&subsection);
+            if let Some(img) = &current.illustration_url {
+                prev.body_md.push_str(&format!(
+                    "\n\n![{}](img/{}){{.secondary}}\n\n",
+                    current.title, img
+                ));
+            }
+            prev.secondary_images.extend(current.secondary_images.clone());
+            i += 1;
+            continue;
+        }
+        merged.push(current);
+        i += 1;
+    }
+    merged
+}
+
 /// Render an ordered chapter list into a single Markdown document.
 ///
 /// Chapters are emitted in `order_key` ascending order. Each chapter is
@@ -174,8 +253,9 @@ pub fn render_markdown(chapters: &[Chapter]) -> String {
             .then_with(|| a.order_key.cmp(&b.order_key))
             .then_with(|| a.slug.cmp(&b.slug))
     });
+    let merged = merge_short_chapters(ordered);
     let mut out = String::new();
-    for (i, ch) in ordered.iter().enumerate() {
+    for (i, ch) in merged.iter().enumerate() {
         if i > 0 {
             out.push_str("\n\n");
         }
@@ -207,7 +287,58 @@ pub fn render_markdown(chapters: &[Chapter]) -> String {
         // low-context image pages and violates TRIOS_PHD_NO_IMAGE_TRAIN.
         out.push('\n');
     }
+    let out = inline_short_references(&out);
     normalize_markdown_tables(&out)
+}
+
+/// Collapse short `## References` / `### References` subsections (with one
+/// to three bullets) into a single inline paragraph at the end of the body.
+/// LaTeX would otherwise float the orphan bullets onto a near-empty page;
+/// inlining them removes the ghost page without losing the citations.
+fn inline_short_references(md: &str) -> String {
+    let lines: Vec<&str> = md.lines().collect();
+    let mut out: Vec<String> = Vec::with_capacity(lines.len());
+    let mut i = 0;
+    while i < lines.len() {
+        let l = lines[i];
+        let is_ref_header = l.trim_start_matches('#').trim_start().to_lowercase().contains("references")
+            && (l.starts_with("## ") || l.starts_with("### "));
+        if !is_ref_header {
+            out.push(l.to_string());
+            i += 1;
+            continue;
+        }
+        // Look-ahead: collect bullet items until next heading / chapter / EOF
+        let mut j = i + 1;
+        // skip blanks
+        while j < lines.len() && lines[j].trim().is_empty() {
+            j += 1;
+        }
+        let mut bullets: Vec<String> = Vec::new();
+        while j < lines.len() {
+            let t = lines[j];
+            let tt = t.trim_start();
+            if tt.starts_with("- ") || tt.starts_with("* ") {
+                bullets.push(tt[2..].trim().to_string());
+                j += 1;
+            } else if t.trim().is_empty() {
+                j += 1;
+            } else {
+                break;
+            }
+        }
+        if bullets.len() >= 1 && bullets.len() <= 3 {
+            // Inline. Skip the original block (header + bullets).
+            out.push(String::new()); // separator paragraph break
+            out.push(format!("**References:** {}", bullets.join("; ")));
+            i = j;
+        } else {
+            // Keep the section as-is.
+            out.push(l.to_string());
+            i += 1;
+        }
+    }
+    out.join("\n")
 }
 
 fn normalize_markdown_tables(md: &str) -> String {
@@ -509,21 +640,40 @@ pub fn attach_orphan_images(chapters: &mut [Chapter], asset_names: &[String]) {
     }
     hero_index.sort_by_key(|(idx, _)| *idx);
 
+    // Group orphans by the chapter they would naturally attach to (largest
+    // preceding hero index). Then distribute within each group: the first
+    // orphan stays with the preceding chapter, subsequent orphans alternate
+    // forward to the next chapter to avoid image-train pages where two or
+    // more banners would stack on the same chapter.
+    use std::collections::HashMap;
+    let mut buckets: HashMap<usize, Vec<String>> = HashMap::new();
     for name in asset_names {
         if used.contains(name) {
             continue;
         }
         let Some(idx) = img_index(name) else { continue };
-        // Find largest hero idx strictly less than this orphan idx.
         let pos = hero_index.partition_point(|(hidx, _)| *hidx < idx);
-        if pos == 0 {
-            // Orphan precedes all heroes — attach to first chapter.
-            if let Some(first) = chapters.first_mut() {
-                first.secondary_images.push(name.clone());
-            }
-        } else {
-            let (_, ch_idx) = hero_index[pos - 1];
-            chapters[ch_idx].secondary_images.push(name.clone());
+        let owner_ch = if pos == 0 { 0 } else { hero_index[pos - 1].1 };
+        buckets.entry(owner_ch).or_default().push(name.clone());
+    }
+
+    for (owner_ch, banners) in buckets {
+        for (i, name) in banners.into_iter().enumerate() {
+            let target = if i == 0 {
+                owner_ch
+            } else {
+                // Push the rest forward to the chapter that follows the
+                // preceding hero in document order; clamp to the last.
+                let next = chapters
+                    .iter()
+                    .enumerate()
+                    .skip(owner_ch + 1)
+                    .find(|(_, c)| c.illustration_url.is_some())
+                    .map(|(i, _)| i)
+                    .unwrap_or(chapters.len().saturating_sub(1));
+                if i == 1 { next } else { owner_ch }
+            };
+            chapters[target].secondary_images.push(name);
         }
     }
 }
@@ -1028,14 +1178,16 @@ mod tests {
         attach_orphan_images(&mut chapters, &assets);
         assert_eq!(
             chapters[0].secondary_images,
-            vec![
-                "brochure-img-p001-011.png".to_string(),
-                "brochure-img-p001-012.png".to_string()
-            ]
+            vec!["brochure-img-p001-011.png".to_string()]
         );
+        let mut actual1 = chapters[1].secondary_images.clone();
+        actual1.sort();
         assert_eq!(
-            chapters[1].secondary_images,
-            vec!["brochure-img-p002-021.png".to_string()]
+            actual1,
+            vec![
+                "brochure-img-p001-012.png".to_string(),
+                "brochure-img-p002-021.png".to_string()
+            ]
         );
     }
 

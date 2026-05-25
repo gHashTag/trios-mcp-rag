@@ -7,14 +7,15 @@ function Figure(elem)
     if #plain.content == 1 and plain.content[1].t == "Image" then
       local img = plain.content[1]
       if img.classes:includes("secondary") then
-        -- Secondary/context images stay anchored in the surrounding prose.
-        -- Use a soft Needspace request so LaTeX may move the block when it
-        -- will not fit, without forcing image-train pages via \clearpage.
+        -- Secondary/context images: tighter footprint so they always fit
+        -- with text on the same page (no lone-banner pages). 0.22 textheight
+        -- (~5cm) keeps the banner visible without dominating; small
+        -- Needspace lets LaTeX move it if even that won't fit.
         return pandoc.RawBlock('latex',
-          '\\par\\Needspace{0.36\\textheight}\\vspace{0.35em}'
-          .. '\\noindent\\begin{center}\\includegraphics[width=\\textwidth,height=0.32\\textheight,keepaspectratio]{'
+          '\\par\\Needspace{0.22\\textheight}\\vspace{0.3em}'
+          .. '\\noindent\\begin{center}\\includegraphics[width=0.92\\textwidth,height=0.20\\textheight,keepaspectratio]{'
           .. img.src .. '}\\end{center}'
-          .. '\\vspace{0.35em}\\par')
+          .. '\\vspace{0.3em}\\par')
       end
       if img.classes:includes("hero") then
         return pandoc.RawBlock('latex',
@@ -22,6 +23,51 @@ function Figure(elem)
           .. img.src .. '}\\vspace{0.5em}')
       end
     end
+  end
+  return elem
+end
+
+-- Aggressive keep-together for "References" subsections.
+-- Empty / single-bullet "ghost reference" pages were the residual cause of
+-- low-context pages in QA. We combine three soft mechanisms before the
+-- heading so LaTeX has multiple chances to keep the heading + its short
+-- itemize on the same page as the chapter's tail content:
+--   * \enlargethispage  — grant ~2 baselineskips extra room on current page
+--   * \nopagebreak[3]   — strong discouragement of a break right after tail
+--   * \Needspace{0.6h}   — increased threshold so short reference blocks
+--                          are forced to stay with preceding tail content
+function Plain(elem)
+  local text = pandoc.utils.stringify(elem):lower()
+  if text:find("data availability") then
+    return {
+      pandoc.RawBlock('latex', '\\nopagebreak[4]'),
+      elem,
+    }
+  end
+  return elem
+end
+
+function Para(elem)
+  local text = pandoc.utils.stringify(elem):lower()
+  if text:find("for paper 3") or text:find("data availability") then
+    return {
+      pandoc.RawBlock('latex', '\\nopagebreak[4]'),
+      elem,
+    }
+  end
+  return elem
+end
+
+function Header(elem)
+  local text = pandoc.utils.stringify(elem):lower()
+  if text:find("references")
+     or text:find("author contributions")
+     or text:find("data availability") then
+    return {
+      pandoc.RawBlock('latex',
+        '\\enlargethispage{2\\baselineskip}\\nopagebreak[3]\\Needspace{0.6\\textheight}'),
+      elem,
+    }
   end
   return elem
 end
@@ -59,7 +105,7 @@ function Table(elem)
     latex = latex:gsub("\\endhead", "")
     latex = latex:gsub("\\endfoot", "")
     latex = latex:gsub("\\endlastfoot", "")
-    latex = latex:gsub("\\caption%b{}\\\\", "")
+    latex = latex:gsub("\\caption%b{}\\tabularnewline", "")
     latex = latex:gsub("\\tabularnewline", "\\\\")
 
     return pandoc.RawBlock("latex",

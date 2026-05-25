@@ -170,6 +170,32 @@ Add to `claude_desktop_config.json`:
 }
 ```
 
+### Dual-server setup (trios-train + trios-rag)
+
+If you also run [`trios-mcp`](https://github.com/gHashTag/trios-mcp) (the `tri` / `trios-igla` wrapper), register both servers side-by-side:
+
+```json
+{
+  "mcpServers": {
+    "trios-train": {
+      "command": "/path/to/trios-mcp/target/release/trios-mcp",
+      "env": {
+        "TRIOS_TRI_BIN": "/path/to/tri",
+        "TRIOS_IGLA_BIN": "/path/to/trios-igla"
+      }
+    },
+    "trios-rag": {
+      "command": "/path/to/trios-mcp-rag/target/release/trios-mcp-rag",
+      "env": {
+        "DATABASE_URL": "<redacted>"
+      }
+    }
+  }
+}
+```
+
+See [`examples/claude_desktop_config.json`](examples/claude_desktop_config.json) for a copy-paste template.
+
 ### Cursor IDE
 
 1. Open **Settings → MCP**
@@ -309,17 +335,30 @@ The server speaks MCP protocol over stdio — each line is a JSON-RPC request, e
 
 ## Railway deployment
 
-If you host your PostgreSQL on Railway:
+### Postgres SSOT
 
-1. Create a PostgreSQL service in your Railway project
-2. Note the connection string from the **Variables** tab
-3. Set `DATABASE_URL` to the internal connection string (uses `DATABASE_URL` auto-provisioned variable)
+1. Create a **PostgreSQL** service in your Railway project.
+2. Copy the internal `DATABASE_URL` from the **Variables** tab.
+3. Populate chapters via the ingest pipeline from the main [trios](https://github.com/gHashTag/trios) repo:
+   ```bash
+   cargo run -p trios-phd -- ingest-rag-chunks
+   ```
 
-For the chapter data, run the ingest pipeline from the main [trios](https://github.com/gHashTag/trios) repo:
+### Deploy trios-mcp-rag as a Railway service
+
+The repo includes a `Dockerfile` with the full PDF toolchain (`pandoc` + `tectonic` + Latin Modern Math fonts) and a `railway.toml` for zero-config deploy:
 
 ```bash
-cargo run -p trios-phd -- ingest-rag-chunks
+# 1. Link your repo to the Railway project
+railway link --project <PROJECT_ID>
+
+# 2. Deploy
+railway up
 ```
+
+Requirements:
+- `DATABASE_URL` must be set in the service **Variables** tab (or auto-provisioned from the Postgres service).
+- The container runs as an **stdio MCP server**. For remote MCP clients, use a local bridge (e.g., `npx mcp-remote`) or run the binary directly with `DATABASE_URL` exported.
 
 ## SSOT → PDF pipeline (`build_pdf` / `trios-mcp-rag build-pdf`)
 
@@ -422,6 +461,7 @@ All flags: `--dry-run` / `--check`, `--database-url-env`,
 {"name":"build_cover","arguments":{
   "title": "GOLDEN CHAIN",
   "version": "v26",
+  "image_path": "assets/covers/golden-chain-gpt2-cover.png",
   "build_dir": "generated/build",
   "compile": true
 }}

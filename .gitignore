@@ -2,4 +2,6 @@
 /generated
 .env
 .env_raw
+GOLDEN_*.pdf
+*.pdf
 

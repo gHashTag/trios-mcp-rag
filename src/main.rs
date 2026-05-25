@@ -378,6 +378,24 @@ fn golden_chain_cover_tex(title: &str, version: &str) -> String {
     tex.replace("__VERSION__", version)
 }
 
+fn golden_chain_image_cover_tex(image_path: &str) -> String {
+    let mut tex = r#"\documentclass[a4paper,11pt]{article}
+\usepackage[a4paper,margin=0pt]{geometry}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\pagestyle{empty}
+\pagecolor{black}
+\begin{document}
+\noindent\makebox[\paperwidth][c]{%
+  \includegraphics[height=\paperheight,keepaspectratio]{__IMAGE_PATH__}%
+}
+\end{document}
+"#
+    .to_string();
+    tex = tex.replace("__IMAGE_PATH__", image_path);
+    tex
+}
+
 fn tool_cover(args: &Value) -> anyhow::Result<Value> {
     let title = args
         .get("title")
@@ -400,16 +418,37 @@ fn tool_cover(args: &Value) -> anyhow::Result<Value> {
     std::fs::create_dir_all(&build_dir)?;
     let tex_path = build_dir.join("cover.tex");
     let pdf_path = build_dir.join("cover.pdf");
-    std::fs::write(&tex_path, golden_chain_cover_tex(title, version))?;
-
     let mut notes = Vec::new();
+
+    let style = if let Some(raw_image_path) = args.get("image_path").and_then(|v| v.as_str()) {
+        let source = PathBuf::from(raw_image_path);
+        let source = if source.is_absolute() {
+            source
+        } else {
+            std::env::current_dir()?.join(source)
+        };
+        if !source.is_file() {
+            return Err(anyhow::anyhow!("cover image not found: {}", source.display()));
+        }
+        let copied_image_path = build_dir.join("cover-input.png");
+        std::fs::copy(&source, &copied_image_path)
+            .with_context(|| format!("copy cover image {}", source.display()))?;
+        std::fs::write(&tex_path, golden_chain_image_cover_tex("cover-input.png"))?;
+        notes.push(format!("using cover image {}", source.display()));
+        "gpt2_raster_image_cover"
+    } else {
+        std::fs::write(&tex_path, golden_chain_cover_tex(title, version))?;
+        "gpt2_chalk_leonardo_architect"
+    };
+
     if compile_pdf {
         let status = Command::new("tectonic")
+            .current_dir(&build_dir)
             .arg("-X")
             .arg("compile")
-            .arg(&tex_path)
+            .arg("cover.tex")
             .arg("--outdir")
-            .arg(&build_dir)
+            .arg(".")
             .status()
             .context("spawn tectonic for cover")?;
         if !status.success() {
@@ -423,7 +462,7 @@ fn tool_cover(args: &Value) -> anyhow::Result<Value> {
 
     Ok(json!({
         "content": [{"type":"text","text": serde_json::to_string_pretty(&json!({
-            "style": "gpt2_chalk_leonardo_architect",
+            "style": style,
             "tex_path": tex_path,
             "pdf_path": if compile_pdf { Some(pdf_path) } else { None },
             "notes": notes
@@ -772,6 +811,7 @@ fn tools_def() -> Value {
          "inputSchema":{"type":"object","properties":{
             "title":{"type":"string","default":"GOLDEN CHAIN"},
             "version":{"type":"string","default":"v26"},
+            "image_path":{"type":"string","description":"Optional local PNG/JPEG cover image to wrap as a full-page PDF cover"},
             "build_dir":{"type":"string","default":"generated/build"},
             "compile":{"type":"boolean","default":true}
          }}},

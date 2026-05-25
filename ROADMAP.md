@@ -19,7 +19,8 @@ Railway/Postgres SSOT -> Markdown -> pandoc -> LaTeX -> tectonic -> PDF
 
 - `build_pdf`: canonical SSOT to PDF renderer.
 - `build_book`: book-mode wrapper with TOC and chapter-level structure.
-- `build_cover`: GPT-2 / Leonardo chalk architect cover generator.
+- `build_cover`: GPT-2 / Leonardo chalk architect cover generator, with
+  optional `image_path` support for full-page raster GPT covers.
 - `preview_chapter_update`: dry-run SQL plan for replacing one body.
 - `preview_chapter_insert`: dry-run SQL plan for adding one chapter.
 - `backup_ssot`: explicit backup table creation, only after confirmation.

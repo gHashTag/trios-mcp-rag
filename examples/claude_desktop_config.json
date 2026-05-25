@@ -1,0 +1,19 @@
+{
+  "mcpServers": {
+    "trios-train": {
+      "command": "/absolute/path/to/trios-mcp/target/release/trios-mcp",
+      "env": {
+        "TRIOS_TRI_BIN": "/abs/path/trios-trainer-igla/target/release/tri",
+        "TRIOS_IGLA_BIN": "/abs/path/trios-trainer-igla/target/release/trios-igla",
+        "RUST_LOG": "info"
+      }
+    },
+    "trios-rag": {
+      "command": "/absolute/path/to/trios-mcp-rag/target/release/trios-mcp-rag",
+      "env": {
+        "DATABASE_URL": "postgresql://postgres:PASSWORD@HOST:PORT/DB",
+        "RUST_LOG": "info"
+      }
+    }
+  }
+}

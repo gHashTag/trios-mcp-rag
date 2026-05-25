@@ -1,5 +1,10 @@
 \documentclass[11pt,a4paper,openany,oneside]{book}
 \raggedbottom
+% Eliminate orphan single-line paragraphs at page breaks
+\widowpenalty=10000
+\clubpenalty=10000
+\interlinepenalty=100
+\brokenpenalty=10000
 \usepackage{fontspec}
 \setmainfont{latinmodern-math.otf}
 \newfontfamily\fallbackfont{lmroman12-regular.otf}
@@ -98,6 +103,29 @@
 \def\pandocbounded#1{#1}
 % Suppress bold-italic font-shape substitution warning
 \DeclareFontShape{TU}{latinmodern-math.otf(0)}{b}{it}{<->ssub*latinmodern-math.otf(0)/b/n}{}
+% Compact chapter heading — reclaims ~40% of vertical whitespace on chapter
+% openers so short appendix chapters don't waste half a page. Uses smaller
+% "Chapter N" line and tighter top/bottom skip than the book class default.
+\renewcommand{\@makechapterhead}[1]{%
+  \vspace*{20pt}%
+  {\parindent 0pt \raggedright \normalfont
+   \ifnum \c@secnumdepth >\m@ne
+     \large\bfseries \@chapapp\space \thechapter
+     \par\nobreak
+     \vskip 6pt
+   \fi
+   \interlinepenalty\@M
+   \LARGE \bfseries #1\par\nobreak
+   \vskip 18pt
+  }}
+\renewcommand{\@makeschapterhead}[1]{%
+  \vspace*{20pt}%
+  {\parindent 0pt \raggedright
+   \normalfont
+   \interlinepenalty\@M
+   \LARGE \bfseries #1\par\nobreak
+   \vskip 18pt
+  }}
 \makeatother
 
 $if(title)$

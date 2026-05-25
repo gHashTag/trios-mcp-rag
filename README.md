@@ -2,7 +2,7 @@
 
 **MCP server** (Model Context Protocol) providing RAG (Retrieval-Augmented Generation) access to the **GOLDEN BRIDGE** chapter database hosted on Railway PostgreSQL.
 
-Exposes 5 tools that let AI agents (Claude Code, Cursor, Windsurf, opencode, etc.) search, read, and audit 80+ chapters of the Trinity S³AI compendium.
+Exposes MCP tools that let AI agents (Claude Code, Cursor, Windsurf, opencode, etc.) search, read, audit, and rebuild the Trinity S³AI compendium from the Railway/Postgres SSOT.
 
 > **AI agents and RAG runs:** read [AGENTS.md](AGENTS.md) before
 > generating PDFs, modifying the build pipeline, or touching the
@@ -24,6 +24,9 @@ evidence ledger:
 | [`docs/CORRECTED_GAP_ANALYSIS.md`](docs/CORRECTED_GAP_ANALYSIS.md) | Claim-by-claim mapping to repo evidence (file/theorem/PR/commit) |
 | [`docs/RETRACTED_OR_UNVERIFIED_CLAIMS.md`](docs/RETRACTED_OR_UNVERIFIED_CLAIMS.md) | Registry of withdrawn or hallucinated claims |
 | [`docs/NOBEL_LEVEL_RESEARCH_PROGRAM.md`](docs/NOBEL_LEVEL_RESEARCH_PROGRAM.md) | 5–10 year falsifiable research program (not a prize promise) |
+| [`docs/RAG_TEST_PLAN.md`](docs/RAG_TEST_PLAN.md) | Local unit, MCP smoke, RAG quality, PDF, and Railway write-gate tests |
+| [`docs/CHAIN_OF_CUSTODY_COMPETITORS.md`](docs/CHAIN_OF_CUSTODY_COMPETITORS.md) | Chain-of-custody proof competitor map for DePIN positioning |
+| [`ROADMAP.md`](ROADMAP.md) | Implementation roadmap for MCP, PDF, SSOT, and custody-proof work |
 
 **Current snapshot (trinity-s3ai `main`, 2026-05-24):**
 - **1,762** machine-checked theorems (`Qed`/`Defined`)
@@ -47,13 +50,14 @@ pointer to evidence or an explicit `unverified` label. See
 | `get_chapter` | Fetch full chapter content by slug |
 | `list_chapters` | List all chapter slugs with metadata (kind, order, word count) |
 | `forbidden_audit` | Scan all chapters for policy violations / prohibited terms |
-| `build_cover` | Generate LaTeX titlepage for the compendium |
+| `build_cover` | Generate and optionally compile the GPT-2-style Leonardo chalk architect cover |
 | `build_pdf` | Run the canonical SSOT → Markdown → pandoc → tectonic → PDF pipeline (dry-run by default) |
 | `get_claim_status` | Search chapters for claim-status markers (Verified, Empirical fit, Open conjecture, High-risk, Falsified, Retracted, Unverified) |
 | `list_claims` | Scan all chapters for claim-status vocabulary and return per-chapter summary |
 | `get_honest_counters` | Return the corrected, audited snapshot of trinity-s3ai formal proof counters |
 | `build_book` | Extended PDF pipeline with book-mode (TOC, chapter-level structure, dry-run by default) |
 | `preview_chapter_update` | **Dry-run only.** Show SQL diff and word-count change for a proposed chapter update |
+| `preview_chapter_insert` | **Dry-run only.** Prepare a parameterized INSERT plan for a proposed new SSOT chapter |
 | `backup_ssot` | Create a timestamped backup table. Requires `confirm=true`; returns dry-run SQL otherwise |
 
 ## Prerequisites
@@ -87,9 +91,11 @@ cargo install --git https://github.com/gHashTag/trios-mcp-rag.git
 |----------|----------|-------------|
 | `DATABASE_URL` | Yes | PostgreSQL connection string |
 
-Example:
+Set the value through your shell, MCP client secret store, Railway
+Variables, or CI secrets. Do not commit or paste the connection string.
+
 ```bash
-export DATABASE_URL="postgresql://user:password@host:5432/dbname"
+export DATABASE_URL="<redacted>"
 ```
 
 ### Database schema
@@ -120,7 +126,7 @@ Add to your `.claude/settings.json`:
       "command": "trios-mcp-rag",
       "args": [],
       "env": {
-        "DATABASE_URL": "postgresql://user:password@host:5432/dbname"
+        "DATABASE_URL": "<redacted>"
       }
     }
   }
@@ -136,7 +142,7 @@ Or use the absolute path to the binary:
       "command": "/path/to/trios-mcp-rag",
       "args": [],
       "env": {
-        "DATABASE_URL": "postgresql://user:password@host:5432/dbname"
+        "DATABASE_URL": "<redacted>"
       }
     }
   }
@@ -157,7 +163,7 @@ Add to `claude_desktop_config.json`:
       "command": "/path/to/trios-mcp-rag",
       "args": [],
       "env": {
-        "DATABASE_URL": "postgresql://user:password@host:5432/dbname"
+        "DATABASE_URL": "<redacted>"
       }
     }
   }
@@ -175,7 +181,7 @@ Add to `claude_desktop_config.json`:
 | Name | `trios-rag` |
 | Type | `stdio` |
 | Command | `/path/to/trios-mcp-rag` |
-| Env | `DATABASE_URL=postgresql://user:password@host:5432/dbname` |
+| Env | `DATABASE_URL=<redacted>` |
 
 Or add to `.cursor/mcp.json` in your project root:
 
@@ -185,7 +191,7 @@ Or add to `.cursor/mcp.json` in your project root:
     "trios-rag": {
       "command": "trios-mcp-rag",
       "env": {
-        "DATABASE_URL": "postgresql://user:password@host:5432/dbname"
+        "DATABASE_URL": "<redacted>"
       }
     }
   }
@@ -202,7 +208,7 @@ Add to `~/.windsurf/settings/mcp.json`:
     "trios-rag": {
       "command": "trios-mcp-rag",
       "env": {
-        "DATABASE_URL": "postgresql://user:password@host:5432/dbname"
+        "DATABASE_URL": "<redacted>"
       }
     }
   }
@@ -220,7 +226,7 @@ Add to `.opencode/opencode.json` or `opencode.json` in your project root:
       "type": "stdio",
       "cmd": "trios-mcp-rag",
       "env": {
-        "DATABASE_URL": "postgresql://user:password@host:5432/dbname"
+        "DATABASE_URL": "<redacted>"
       }
     }
   }
@@ -242,7 +248,7 @@ docker build -t trios-mcp-rag .
 
 # Run as MCP server
 docker run -i --rm \
-  -e DATABASE_URL="postgresql://user:password@host:5432/dbname" \
+  -e DATABASE_URL="<redacted>" \
   trios-mcp-rag
 ```
 
@@ -253,7 +259,7 @@ Then point your MCP client at the Docker command:
   "mcpServers": {
     "trios-rag": {
       "command": "docker",
-      "args": ["run", "-i", "--rm", "-e", "DATABASE_URL=postgresql://user:password@host:5432/dbname", "trios-mcp-rag"]
+      "args": ["run", "-i", "--rm", "-e", "DATABASE_URL=<redacted>", "trios-mcp-rag"]
     }
   }
 }
@@ -412,6 +418,14 @@ All flags: `--dry-run` / `--check`, `--database-url-env`,
 // Dry-run from an MCP client:
 {"name":"build_pdf","arguments":{"dry_run":true}}
 
+// Generate the cover used by GOLDEN_CHAIN.pdf:
+{"name":"build_cover","arguments":{
+  "title": "GOLDEN CHAIN",
+  "version": "v26",
+  "build_dir": "generated/build",
+  "compile": true
+}}
+
 // Full build:
 {"name":"build_pdf","arguments":{
   "dry_run": false,
@@ -421,6 +435,15 @@ All flags: `--dry-run` / `--check`, `--database-url-env`,
   "out_dir": "generated/out",
   "build_dir": "generated/build"
 }}
+
+// Prepare a new SSOT chapter without writing to Railway:
+{"name":"preview_chapter_insert","arguments":{
+  "slug": "fm-13-depin-positioning",
+  "kind": "frontmatter",
+  "order_key": 65,
+  "title": "Armored Provenance Layer for DePIN",
+  "body_md": "# Armored Provenance Layer for DePIN\n\n..."
+}}
 ```
 
 The MCP tool defaults to `dry_run=true` so that an agent calling
@@ -428,7 +451,8 @@ The MCP tool defaults to `dry_run=true` so that an agent calling
 
 ### Testing
 
-Unit tests cover markdown ordering, identifier validation, CLI parsing,
+Unit tests cover markdown ordering, book-kind ordering, Markdown table
+repair, secondary image recovery, identifier validation, CLI parsing,
 and the dry-run path (no Postgres needed):
 
 ```bash

@@ -1,8 +1,10 @@
+use anyhow::{anyhow, Context};
 use clap::Parser;
 use serde_json::{json, Value};
 use std::env;
 use std::io::{self, BufRead, Write};
 use std::path::PathBuf;
+use std::process::Command;
 
 mod pipeline;
 
@@ -53,16 +55,27 @@ enum Commands {
     },
 }
 
-fn dsn() -> String {
-    env::var("DATABASE_URL")
-        .unwrap_or_else(|_| "postgresql://postgres:postgres@localhost:5432/railway".into())
+fn dsn() -> anyhow::Result<String> {
+    if let Ok(v) = env::var("DATABASE_URL") {
+        if !v.is_empty() {
+            return Ok(v);
+        }
+    }
+    if let Ok(v) = env::var("RAILWAY_SSOT_URL") {
+        if !v.is_empty() {
+            return Ok(v);
+        }
+    }
+    Err(anyhow!(
+        "no DSN in environment: set DATABASE_URL or RAILWAY_SSOT_URL"
+    ))
 }
 
 fn query_rows(
     sql: &str,
     params: &[&(dyn tokio_postgres::types::ToSql + Sync)],
 ) -> anyhow::Result<Vec<tokio_postgres::Row>> {
-    let dsn = dsn();
+    let dsn = dsn()?;
     let rt = tokio::runtime::Runtime::new()?;
     rt.block_on(async {
         let (client, conn) = tokio_postgres::connect(&dsn, tokio_postgres::NoTls).await?;
@@ -75,7 +88,7 @@ fn query_rows(
 }
 
 fn execute_sql(sql: &str) -> anyhow::Result<u64> {
-    let dsn = dsn();
+    let dsn = dsn()?;
     let rt = tokio::runtime::Runtime::new()?;
     rt.block_on(async {
         let (client, conn) = tokio_postgres::connect(&dsn, tokio_postgres::NoTls).await?;
@@ -184,17 +197,239 @@ fn tool_audit() -> anyhow::Result<Value> {
     Ok(json!({"content":[{"type":"text","text":msg}],"isError":false}))
 }
 
-fn tool_cover() -> anyhow::Result<Value> {
-    let rows = query_rows(
-        "SELECT count(*) AS n, sum(word_count) AS tw FROM ssot_brochure.chapters",
-        &[],
-    )?;
-    let n: i64 = rows[0].get::<_, i64>("n");
-    let tw: i64 = rows[0].get::<_, Option<i64>>("tw").unwrap_or(0);
-    let tex = format!(
-        r"\begin{{titlepage}}\centering\vspace*{{2cm}}\n{{\Huge\bfseries GOLDEN BRIDGE}}\\[0.5em]\n{{\Large A Three-Strand Compendium on $\varphi$-Structured Physical Constants and Ternary Silicon}}\\[2em]\n{{\large Dmitrii Vasilev \\ Stergios Pellis \\ Kenneth Olsen}}\\[1em]\n{{\large April 2026 \\ v27}}\\[2em]\n\rule{{\textwidth}}{{0.4pt}}\\[1em]\n{{\textit{{Railway PostgreSQL SSOT}}}}\\[0.5em]\n{{\texttt{{{n} chapters, {tw} words}}}}\\[2em]\n\rule{{\textwidth}}{{0.4pt}}\\[2em]\n{{\small $\varphi^2 + \varphi^{{-2}} = 3$ (Coq Qed) \quad 0x47C0 silicon anchor (Theorem 36.1)}}\\[0.5em]\n{{\small $\sim$1 GOPS @ $\sim$50 MHz @ $\sim$1 W ternary (projected)}}\\[3em]\n\end{{titlepage}}\n"
-    );
-    Ok(json!({"content":[{"type":"text","text":tex}],"isError":false}))
+fn golden_chain_cover_tex(title: &str, version: &str) -> String {
+    let mut tex = r#"\documentclass[a4paper,11pt]{article}
+\usepackage[a4paper,margin=0pt]{geometry}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,calc}
+\usepackage{fontspec}
+\setmainfont{latinmodern-math.otf}
+\setmonofont{lmmono10-regular.otf}
+\usepackage{xcolor}
+\usepackage{amsmath,amssymb}
+\definecolor{gold}{HTML}{D4AF37}
+\definecolor{deepgold}{HTML}{F5C518}
+\definecolor{chalkc}{HTML}{F5F5DC}
+\pagestyle{empty}
+\pagecolor{black}
+\color{chalkc}
+
+\tikzset{
+  chalk/.style={color=chalkc, line width=0.4pt, line cap=round, opacity=0.86},
+  chalkfaint/.style={color=chalkc, line width=0.25pt, line cap=round, opacity=0.42},
+  measure/.style={color=chalkc, line width=0.25pt, line cap=round, opacity=0.70,
+    -{Stealth[length=2pt,width=2pt]}},
+  goldline/.style={color=gold, line width=0.5pt, opacity=0.9},
+}
+
+\begin{document}
+\begin{tikzpicture}[remember picture, overlay,
+                    every node/.style={font=\small,inner sep=0pt}]
+  \coordinate (C) at (current page.center);
+
+  \begin{scope}[shift={(C)}]
+    \draw[chalkfaint] (-9.5,-13.5) rectangle (9.5,13.5);
+    \draw[chalkfaint] (-9.2,-13.2) rectangle (9.2,13.2);
+    \foreach \x/\y in {-9.35/13.35,-9.35/-13.35,9.35/13.35,9.35/-13.35} {
+      \draw[chalkfaint] (\x-0.25,\y) -- (\x+0.25,\y);
+      \draw[chalkfaint] (\x,\y-0.25) -- (\x,\y+0.25);
+    }
+  \end{scope}
+
+  \node[anchor=north, gold, opacity=0.85, font=\itshape\small]
+    at ([yshift=-0.55cm]current page.north)
+    {Flos Aureus Research Programme \;·\; Trinity S$^{3}$AI};
+
+  \node[anchor=north, deepgold, font=\fontsize{48}{52}\selectfont\bfseries]
+    at ([yshift=-2.0cm]current page.north)
+    {__TITLE__};
+
+  \node[anchor=north, gold, font=\itshape\large]
+    at ([yshift=-3.25cm]current page.north)
+    {A Three-Strand Compendium on $\phi$-Structured Physical Constants};
+
+  \node[anchor=north, chalk, opacity=0.78, font=\small\itshape]
+    at ([yshift=-3.85cm]current page.north)
+    {Anchored in the Three Crowns of TTSKY26b \;·\; Phi · Euler · Gamma};
+
+  \draw[goldline] ([xshift=-6cm,yshift=-4.35cm]current page.north) --
+                  ([xshift=6cm,yshift=-4.35cm]current page.north);
+
+  \node[anchor=north, chalk, font=\large\scshape]
+    at ([yshift=-5.0cm]current page.north) {Authors};
+
+  \node[anchor=north, chalk, font=\normalsize]
+    at ([yshift=-5.55cm]current page.north)
+    {\textbf{Dmitrii Vasilev}\;{\small\itshape(corresponding)}};
+  \node[anchor=north, chalk, opacity=0.75, font=\footnotesize]
+    at ([yshift=-5.95cm]current page.north)
+    {Trinity Constants · Catalog42 · $G_{\phi}$ grammar · TTSKY26b · TRI-27};
+
+  \node[anchor=north, chalk, font=\normalsize]
+    at ([yshift=-6.45cm]current page.north)
+    {\textbf{Stergios Pellis}};
+  \node[anchor=north, chalk, opacity=0.75, font=\footnotesize]
+    at ([yshift=-6.85cm]current page.north)
+    {University of Ioannina · Pellis Hierarchical Expansion · $\phi^{-k}$ formulas};
+
+  \node[anchor=north, chalk, font=\normalsize]
+    at ([yshift=-7.35cm]current page.north)
+    {\textbf{Scott Olsen}};
+  \node[anchor=north, chalk, opacity=0.75, font=\footnotesize]
+    at ([yshift=-7.75cm]current page.north)
+    {Tier-D $\phi$-cosmology · cross-scale $\phi$-invariance · historical foundation};
+
+  \begin{scope}[shift={(C)}, yshift=-0.3cm]
+    \draw[chalk] (0,0) circle (4.2);
+    \draw[chalk] (-3,-3) rectangle (3,3);
+    \draw[chalkfaint] (-3,0) -- (0,3) -- (3,0) -- (0,-3) -- cycle;
+    \draw[chalkfaint] (-4.6,0) -- (4.6,0);
+    \draw[chalkfaint] (0,-4.6) -- (0,4.6);
+
+    \draw[goldline] (90:2.6) -- (162:2.6) -- (234:2.6) --
+                    (306:2.6) -- (18:2.6) -- cycle;
+    \draw[chalkfaint] (90:2.6) -- (234:2.6) -- (18:2.6) --
+                      (162:2.6) -- (306:2.6) -- cycle;
+
+    \draw[chalk]
+       (0,0) arc[start angle=180,end angle=90,radius=1.0]
+       ++(0,0) arc[start angle=270,end angle=180,radius=0.618]
+       ++(0,0) arc[start angle=0,end angle=-90,radius=0.382]
+       ++(0,0) arc[start angle=90,end angle=0,radius=0.236];
+
+    \foreach \a in {0,30,60,90,120,150,180,210,240,270,300,330} {
+       \draw[chalkfaint] (0,0) -- (\a:4.2);
+    }
+
+    \draw[measure] (-4.2,-4.6) -- (4.2,-4.6);
+    \node[chalk, opacity=0.85, font=\footnotesize\itshape]
+      at (0,-4.95) {$\phi^{2} + \phi^{-2} = 3$};
+    \node[chalk, opacity=0.7, rotate=90, font=\scriptsize\itshape]
+      at (-4.55,0) {radius $= 1$};
+    \node[chalk, opacity=0.7, rotate=-90, font=\scriptsize\itshape]
+      at (4.55,0) {$1{:}\phi{:}\phi^{2}$};
+  \end{scope}
+
+  \begin{scope}[shift={(C)}, xshift=-6.5cm, yshift=-7.5cm, scale=0.8]
+    \draw[chalk] (0,0) -- (1,0) -- (1.5,0.87) -- (1,1.74) -- (0,1.74) -- (-0.5,0.87) -- cycle;
+    \draw[chalkfaint] (0.5,0.87) -- (1.5,0.87);
+    \draw[chalkfaint] (0.5,0.87) -- (-0.5,0.87);
+    \draw[chalkfaint] (0.5,0.87) -- (0,1.74);
+    \draw[chalkfaint] (0.5,0.87) -- (0,0);
+    \draw[chalkfaint] (0.5,0.87) -- (1,0);
+    \draw[chalkfaint] (0.5,0.87) -- (1,1.74);
+    \node[chalk, opacity=0.85, font=\tiny\ttfamily] at (0.5,-0.45) {0x47C0};
+    \node[chalk, opacity=0.6, font=\tiny\itshape] at (0.5,-0.85) {Three Crowns};
+  \end{scope}
+
+  \begin{scope}[shift={(C)}, xshift=5.6cm, yshift=-7.5cm, scale=0.8]
+    \draw[goldline] (-1,0) circle (0.45);
+    \draw[goldline] (0,0) circle (0.45);
+    \draw[goldline] (1,0) circle (0.45);
+    \node[chalk, opacity=0.7, font=\tiny\itshape] at (0,-0.95) {three strands};
+  \end{scope}
+
+  \begin{scope}[shift={(C)}, xshift=0cm, yshift=-7.5cm, scale=0.85]
+    \draw[chalk] (0,0) circle (0.9);
+    \draw[chalkfaint] (-0.9,0) -- (0.9,0);
+    \draw[chalkfaint] (0,-0.9) -- (0,0.9);
+    \node[chalk, opacity=0.85, font=\footnotesize] at (0,0) {$\mathbb{Z}[\phi]$};
+    \node[chalk, opacity=0.7, font=\tiny\itshape] at (0,-1.25) {$x^{2}=x+1$};
+  \end{scope}
+
+  \draw[goldline] ([xshift=-7cm,yshift=4.1cm]current page.south) --
+                  ([xshift=7cm,yshift=4.1cm]current page.south);
+
+  \node[anchor=south, gold, opacity=0.85, font=\scshape\small]
+    at ([yshift=3.55cm]current page.south) {Selected Identities};
+
+  \node[anchor=south, chalk, opacity=0.92, font=\normalsize]
+    at ([xshift=-5cm,yshift=2.8cm]current page.south)
+    {$\phi^{2} + \phi^{-2} = 3$};
+
+  \node[anchor=south, chalk, opacity=0.92, font=\normalsize]
+    at ([yshift=2.8cm]current page.south)
+    {$\alpha^{-1} \approx 137.036$};
+
+  \node[anchor=south, chalk, opacity=0.92, font=\normalsize]
+    at ([xshift=5cm,yshift=2.8cm]current page.south)
+    {$\mu = m_{p}/m_{e} \approx 1836.15$};
+
+  \node[anchor=south, chalk, opacity=0.92, font=\normalsize]
+    at ([xshift=-4cm,yshift=2.1cm]current page.south)
+    {$m_{H} = 4\,\phi^{3}\,e^{2}$};
+
+  \node[anchor=south, chalk, opacity=0.92, font=\normalsize]
+    at ([xshift=4cm,yshift=2.1cm]current page.south)
+    {$\delta_{CP} = 3/\phi^{2} \approx 65.66^{\circ}$};
+
+  \draw[chalkfaint] ([xshift=-8cm,yshift=1.35cm]current page.south) --
+                    ([xshift=8cm,yshift=1.35cm]current page.south);
+
+  \node[anchor=south, chalk, opacity=0.7, font=\scriptsize]
+    at ([yshift=0.9cm]current page.south)
+    {DOI \texttt{10.5281/zenodo.19227877}
+     \;\;·\;\; GOLDEN BRIDGE __VERSION__ \;·\; 2026};
+\end{tikzpicture}
+\end{document}
+"#
+    .to_string();
+    tex = tex.replace("__TITLE__", title);
+    tex.replace("__VERSION__", version)
+}
+
+fn tool_cover(args: &Value) -> anyhow::Result<Value> {
+    let title = args
+        .get("title")
+        .and_then(|v| v.as_str())
+        .unwrap_or("GOLDEN CHAIN");
+    let version = args
+        .get("version")
+        .and_then(|v| v.as_str())
+        .unwrap_or("v26");
+    let build_dir = args
+        .get("build_dir")
+        .and_then(|v| v.as_str())
+        .map(PathBuf::from)
+        .unwrap_or_else(|| PathBuf::from("generated/build"));
+    let compile_pdf = args
+        .get("compile")
+        .and_then(|v| v.as_bool())
+        .unwrap_or(true);
+
+    std::fs::create_dir_all(&build_dir)?;
+    let tex_path = build_dir.join("cover.tex");
+    let pdf_path = build_dir.join("cover.pdf");
+    std::fs::write(&tex_path, golden_chain_cover_tex(title, version))?;
+
+    let mut notes = Vec::new();
+    if compile_pdf {
+        let status = Command::new("tectonic")
+            .arg("-X")
+            .arg("compile")
+            .arg(&tex_path)
+            .arg("--outdir")
+            .arg(&build_dir)
+            .status()
+            .context("spawn tectonic for cover")?;
+        if !status.success() {
+            return Err(anyhow::anyhow!(
+                "tectonic cover compile failed: exit {:?}",
+                status.code()
+            ));
+        }
+        notes.push(format!("compiled {}", pdf_path.display()));
+    }
+
+    Ok(json!({
+        "content": [{"type":"text","text": serde_json::to_string_pretty(&json!({
+            "style": "gpt2_chalk_leonardo_architect",
+            "tex_path": tex_path,
+            "pdf_path": if compile_pdf { Some(pdf_path) } else { None },
+            "notes": notes
+        }))?}],
+        "isError": false
+    }))
 }
 
 /// MCP `build_pdf` tool: dispatch the SSOT -> PDF pipeline.
@@ -412,6 +647,73 @@ fn tool_preview_chapter_update(args: &Value) -> anyhow::Result<Value> {
     }))
 }
 
+/// `preview_chapter_insert` — dry-run: prepare INSERT SQL without executing.
+fn tool_preview_chapter_insert(args: &Value) -> anyhow::Result<Value> {
+    let table = args
+        .get("chapters_table")
+        .and_then(|v| v.as_str())
+        .unwrap_or("ssot_brochure.chapters");
+    pipeline::validate_table_ident(table)?;
+
+    let slug = args.get("slug").and_then(|v| v.as_str()).unwrap_or("");
+    let kind = args
+        .get("kind")
+        .and_then(|v| v.as_str())
+        .unwrap_or("frontmatter");
+    let order_key = args
+        .get("order_key")
+        .and_then(|v| v.as_i64())
+        .ok_or_else(|| anyhow!("Missing integer 'order_key' argument"))?;
+    let title = args.get("title").and_then(|v| v.as_str()).unwrap_or("");
+    let body_md = args.get("body_md").and_then(|v| v.as_str()).unwrap_or("");
+    let illustration_url = args
+        .get("illustration_url")
+        .and_then(|v| v.as_str())
+        .filter(|s| !s.is_empty());
+
+    if slug.is_empty() || kind.is_empty() || title.is_empty() || body_md.is_empty() {
+        return Ok(json!({
+            "content": [{"type":"text","text":"Missing required arguments: slug, kind, order_key, title, body_md"}],
+            "isError": true
+        }));
+    }
+
+    let word_count = args
+        .get("word_count")
+        .and_then(|v| v.as_i64())
+        .unwrap_or_else(|| body_md.split_whitespace().count() as i64);
+    let backup_name = format!(
+        "{}_backup_{}_preview",
+        table.replace('.', "_"),
+        chrono::Local::now().format("%Y%m%d")
+    );
+    let diff = json!({
+        "dry_run": true,
+        "no_database_write": true,
+        "chapters_table": table,
+        "proposed_row": {
+            "slug": slug,
+            "kind": kind,
+            "order_key": order_key,
+            "title": title,
+            "body_md_length": body_md.len(),
+            "word_count": word_count,
+            "illustration_url": illustration_url
+        },
+        "backup_required_before_write": format!("CREATE TABLE {} AS SELECT * FROM {};", backup_name, table),
+        "exact_sql_template": format!(
+            "INSERT INTO {} (slug, kind, order_key, title, body_md, illustration_url, word_count) VALUES ($1, $2, $3, $4, $5, $6, $7);",
+            table
+        ),
+        "rollback_sql_template": format!("DELETE FROM {} WHERE slug = $1;", table),
+        "warning": "This is a DRY-RUN. No changes were made. Per AGENTS.md, executing this later requires backup, dry-run review, and explicit in-session human confirmation."
+    });
+    Ok(json!({
+        "content": [{"type":"text","text": serde_json::to_string_pretty(&diff)?}],
+        "isError": false
+    }))
+}
+
 /// `backup_ssot` — create a timestamped backup table.
 fn tool_backup_ssot(args: &Value) -> anyhow::Result<Value> {
     let confirm = args
@@ -444,7 +746,7 @@ fn tool_backup_ssot(args: &Value) -> anyhow::Result<Value> {
     match execute_sql(&sql) {
         Ok(rows) => Ok(json!({
             "content": [{"type":"text","text": format!(
-                "BACKUP CREATED: {} ({} rows copied from {}).\nTo restore: DROP TABLE {}; INSERT INTO {} SELECT * FROM {};",
+                "BACKUP CREATED: {} ({} rows copied from {}).\nTo restore: TRUNCATE {}; INSERT INTO {} SELECT * FROM {};",
                 backup_name, rows, table, table, table, backup_name
             )}],
             "isError": false
@@ -466,8 +768,13 @@ fn tools_def() -> Value {
          "inputSchema":{"type":"object","properties":{}}},
         {"name":"forbidden_audit","description":"Scan all chapters for policy violations",
          "inputSchema":{"type":"object","properties":{}}},
-        {"name":"build_cover","description":"Generate LaTeX titlepage for GOLDEN BRIDGE v27",
-         "inputSchema":{"type":"object","properties":{}}},
+        {"name":"build_cover","description":"Generate and optionally compile the GPT-2-style Leonardo chalk architect cover for GOLDEN CHAIN",
+         "inputSchema":{"type":"object","properties":{
+            "title":{"type":"string","default":"GOLDEN CHAIN"},
+            "version":{"type":"string","default":"v26"},
+            "build_dir":{"type":"string","default":"generated/build"},
+            "compile":{"type":"boolean","default":true}
+         }}},
         {"name":"build_pdf","description":"Run the SSOT->Markdown->pandoc->tectonic->PDF pipeline. Defaults to dry_run=true (check env/deps/paths only). Set dry_run=false to actually build.",
          "inputSchema":{"type":"object","properties":{
             "dry_run":{"type":"boolean","default":true},
@@ -506,6 +813,17 @@ fn tools_def() -> Value {
             "slug":{"type":"string"},
             "new_body_md":{"type":"string"}
          },"required":["slug","new_body_md"]}},
+        {"name":"preview_chapter_insert","description":"DRY-RUN only. Prepare a parameterized INSERT plan for a new SSOT chapter without executing any write.",
+         "inputSchema":{"type":"object","properties":{
+            "chapters_table":{"type":"string","default":"ssot_brochure.chapters"},
+            "slug":{"type":"string"},
+            "kind":{"type":"string","default":"frontmatter"},
+            "order_key":{"type":"integer"},
+            "title":{"type":"string"},
+            "body_md":{"type":"string"},
+            "illustration_url":{"type":"string"},
+            "word_count":{"type":"integer"}
+         },"required":["slug","kind","order_key","title","body_md"]}},
         {"name":"backup_ssot","description":"Create a timestamped backup of the chapters table. Requires confirm=true to execute; returns dry-run SQL otherwise.",
          "inputSchema":{"type":"object","properties":{
             "confirm":{"type":"boolean","default":false},
@@ -536,7 +854,7 @@ fn dispatch(
                 "get_chapter" => tool_get(args.get("slug").and_then(|v| v.as_str()).unwrap_or("")),
                 "list_chapters" => tool_list(),
                 "forbidden_audit" => tool_audit(),
-                "build_cover" => tool_cover(),
+                "build_cover" => tool_cover(&args),
                 "build_pdf" => tool_build_pdf(&args),
                 "get_claim_status" => tool_get_claim_status(&args),
                 "list_claims" => tool_list_claims(),
@@ -550,6 +868,7 @@ fn dispatch(
                     tool_build_pdf(&book_args)
                 }
                 "preview_chapter_update" => tool_preview_chapter_update(&args),
+                "preview_chapter_insert" => tool_preview_chapter_insert(&args),
                 "backup_ssot" => tool_backup_ssot(&args),
                 _ => Err(anyhow::anyhow!("Unknown tool: {}", name)),
             };

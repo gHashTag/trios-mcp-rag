@@ -1,4 +1,4 @@
-\documentclass[11pt,a4paper,openany]{book}
+\documentclass[11pt,a4paper,openany,oneside]{book}
 \raggedbottom
 \usepackage{fontspec}
 \setmainfont{latinmodern-math.otf}
@@ -10,30 +10,49 @@
 \usepackage{xurl}
 \usepackage{bookmark}
 \hypersetup{
-  pdftitle={GOLDEN BRIDGE --- Trinity S\textsuperscript{3}AI Compendium},
-  pdfauthor={Trinity S\textsuperscript{3}AI Research Group},
+  pdftitle={GOLDEN CHAIN --- Trinity S\textsuperscript{3}AI Compendium},
+  pdfauthor={Dmitrii Vasilev; Stergios Pellis; Scott Olsen},
   pdfsubject={φ-structured physical constants, unification, and cognitive architecture},
-  pdfkeywords={golden ratio, fine-structure constant, unification, physics, AI, Trinity S3AI},
+  pdfkeywords={golden ratio, fine-structure constant, unification, physics, AI, Trinity S3AI, Vasilev, Pellis, Olsen},
   bookmarksopen=true,
   bookmarksopenlevel=1,
   pdfstartview=FitH,
-  unicode=true
+  unicode=true,
+  hidelinks,
+  pdfborder={0 0 0}
 }
 \usepackage{booktabs}
 \usepackage{longtable}
+\usepackage{needspace}
 \usepackage{array}
 \usepackage{calc}
 \usepackage{float}
 \usepackage{tabularx}
 \usepackage{seqsplit}
+\usepackage{ragged2e}
+\usepackage{fancyvrb}
+\usepackage{fvextra}
 \usepackage{amsmath,amssymb}
 \usepackage{newunicodechar}
 \usepackage{silence}
 \WarningFilter{longtable}{Column widths have changed}
 \usepackage{etoolbox}
-\BeforeBeginEnvironment{longtable}{\footnotesize}
-\BeforeBeginEnvironment{verbatim}{\scriptsize}
-\AfterEndEnvironment{verbatim}{\normalsize}
+\BeforeBeginEnvironment{longtable}{%
+  \scriptsize
+  \setlength{\LTleft}{0pt}%
+  \setlength{\LTright}{0pt}%
+  \setlength{\tabcolsep}{2pt}%
+  \renewcommand{\arraystretch}{1.12}%
+}
+\AfterEndEnvironment{longtable}{%
+  \normalsize
+  \renewcommand{\arraystretch}{1}%
+}
+\BeforeBeginEnvironment{tabular}{\scriptsize}
+\AfterEndEnvironment{tabular}{\normalsize}
+\BeforeBeginEnvironment{tabularx}{\scriptsize}
+\AfterEndEnvironment{tabularx}{\normalsize}
+\DefineVerbatimEnvironment{verbatim}{Verbatim}{fontsize=\scriptsize,breaklines=true,breakanywhere=true}
 \newunicodechar{²}{\ensuremath{^2}}
 \newunicodechar{³}{\ensuremath{^3}}
 \newunicodechar{⁻}{\ensuremath{^-}}
@@ -58,11 +77,12 @@
 \newunicodechar{₅}{\ensuremath{_5}}
 \newunicodechar{₇}{\ensuremath{_7}}
 \newunicodechar{ʲ}{\ensuremath{^j}}
+\newunicodechar{√}{\ensuremath{\surd}}
 \usepackage{amsfonts}
 \usepackage{tikz}
 \usepackage{enumitem}
-\setlist[itemize]{midpenalty=500}
-\setlist[enumerate]{midpenalty=500}
+\setlist[itemize]{leftmargin=1.2em,nosep,topsep=0.2em,partopsep=0pt,parsep=0pt,itemsep=0.05em,midpenalty=1000}
+\setlist[enumerate]{leftmargin=1.4em,nosep,topsep=0.2em,partopsep=0pt,parsep=0pt,itemsep=0.05em,midpenalty=1000}
 \usepackage[defaultlines=2,all]{nowidow}
 \providecommand{\tightlist}{%
   \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
@@ -70,8 +90,10 @@
 \sloppy
 \hbadness=10000
 \vbadness=10000
-\setlength{\tabcolsep}{1pt}
+\setlength{\tabcolsep}{2pt}
 \setlength{\arraycolsep}{1pt}
+\setcounter{tocdepth}{1}
+\setcounter{secnumdepth}{2}
 \makeatletter
 \def\pandocbounded#1{#1}
 % Suppress bold-italic font-shape substitution warning

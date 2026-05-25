@@ -26,6 +26,12 @@ pub struct Chapter {
     pub title: String,
     pub body_md: String,
     pub illustration_url: Option<String>,
+    /// Secondary (orphan) images recovered from ssot_brochure.assets whose
+    /// brochure-img index falls between this chapter's hero and the next.
+    /// These are tracked for future anchored rendering, but are not emitted
+    /// automatically because orphan image appendices create image-train pages.
+    #[serde(default)]
+    pub secondary_images: Vec<String>,
 }
 
 /// Configuration for one build.
@@ -149,7 +155,25 @@ pub fn validate_table_ident(t: &str) -> Result<()> {
 /// filter target individual chapters later.
 pub fn render_markdown(chapters: &[Chapter]) -> String {
     let mut ordered: Vec<&Chapter> = chapters.iter().collect();
-    ordered.sort_by_key(|c| (c.order_key, c.slug.clone()));
+    // Logical book order: frontmatter → paper1 → paper2 → paper3 →
+    // hardware_addendum → all appendices. Within each block, preserve
+    // the SSOT order_key and then slug.
+    let kind_rank = |k: &str| -> u8 {
+        match k {
+            "frontmatter" => 0,
+            "paper1" => 1,
+            "paper2" => 2,
+            "paper3" => 3,
+            "hardware_addendum" => 4,
+            k if k.starts_with("appx") => 5,
+            _ => 6,
+        }
+    };
+    ordered.sort_by(|a, b| {
+        kind_rank(&a.kind).cmp(&kind_rank(&b.kind))
+            .then_with(|| a.order_key.cmp(&b.order_key))
+            .then_with(|| a.slug.cmp(&b.slug))
+    });
     let mut out = String::new();
     for (i, ch) in ordered.iter().enumerate() {
         if i > 0 {
@@ -177,9 +201,168 @@ pub fn render_markdown(chapters: &[Chapter]) -> String {
             }
             out.push_str(ch.body_md.trim_end());
         }
+        // Do not auto-append `secondary_images` here. The RAG image-placement
+        // contract requires every image to be anchored to a substantive
+        // heading/body block; appending orphan assets at chapter end creates
+        // low-context image pages and violates TRIOS_PHD_NO_IMAGE_TRAIN.
         out.push('\n');
     }
-    out
+    normalize_markdown_tables(&out)
+}
+
+fn normalize_markdown_tables(md: &str) -> String {
+    let lines: Vec<&str> = md.lines().collect();
+    let mut out = Vec::with_capacity(lines.len());
+    let mut i = 0;
+
+    while i < lines.len() {
+        if is_pipe_row(lines[i]) && i + 1 < lines.len() && is_table_delimiter(lines[i + 1]) {
+            let expected_cols = split_pipe_cells(lines[i]).len();
+            out.push(lines[i].to_string());
+            out.push(lines[i + 1].to_string());
+            i += 2;
+
+            while i < lines.len() && is_pipe_row(lines[i]) {
+                out.push(normalize_pipe_table_row(lines[i], expected_cols));
+                i += 1;
+            }
+        } else {
+            out.push(lines[i].to_string());
+            i += 1;
+        }
+    }
+
+    let mut normalized = out.join("\n");
+    if md.ends_with('\n') {
+        normalized.push('\n');
+    }
+    normalized
+}
+
+fn is_pipe_row(line: &str) -> bool {
+    let trimmed = line.trim_start();
+    trimmed.starts_with('|') && trimmed[1..].contains('|')
+}
+
+fn is_table_delimiter(line: &str) -> bool {
+    if !is_pipe_row(line) {
+        return false;
+    }
+    let cells = split_pipe_cells(line);
+    !cells.is_empty()
+        && cells.iter().all(|cell| {
+            let t = cell.trim();
+            t.len() >= 3 && t.chars().all(|c| c == '-' || c == ':')
+        })
+}
+
+fn split_pipe_cells(line: &str) -> Vec<String> {
+    let mut inner = line.trim();
+    if inner.starts_with('|') {
+        inner = &inner[1..];
+    }
+    if inner.ends_with('|') && !inner.ends_with("\\|") {
+        inner = &inner[..inner.len() - 1];
+    }
+
+    let mut cells = Vec::new();
+    let mut current = String::new();
+    let mut escaped = false;
+    for ch in inner.chars() {
+        if ch == '|' && !escaped {
+            cells.push(current);
+            current = String::new();
+        } else {
+            current.push(ch);
+        }
+        escaped = ch == '\\' && !escaped;
+        if ch != '\\' {
+            escaped = false;
+        }
+    }
+    cells.push(current);
+    cells
+}
+
+fn normalize_pipe_table_row(line: &str, expected_cols: usize) -> String {
+    let mut cells = split_pipe_cells(line);
+    if expected_cols >= 3 && cells.len() > expected_cols {
+        let tail_cols = expected_cols - 2;
+        let middle_end = cells.len().saturating_sub(tail_cols);
+        let mut repaired = Vec::with_capacity(expected_cols);
+        repaired.push(cells[0].clone());
+        repaired.push(cells[1..middle_end].join("|"));
+        repaired.extend(cells[middle_end..].iter().cloned());
+        cells = repaired;
+    }
+
+    let normalized: Vec<String> = cells
+        .iter()
+        .map(|cell| normalize_table_cell(cell))
+        .collect();
+    format!("| {} |", normalized.join(" | "))
+}
+
+fn normalize_table_cell(cell: &str) -> String {
+    let trimmed = cell.trim();
+    let spaced = if looks_formula_like(trimmed) {
+        space_formula_operators(trimmed)
+    } else {
+        trimmed.to_string()
+    };
+    spaced.replace('|', "\\|")
+}
+
+fn looks_formula_like(text: &str) -> bool {
+    if text.contains("://") || text.contains('@') {
+        return false;
+    }
+    let has_math_symbol = text.chars().any(|c| {
+        matches!(
+            c,
+            '\u{03b1}' // alpha
+                | '\u{03b3}' // gamma
+                | '\u{03b4}' // delta
+                | '\u{03b8}' // theta
+                | '\u{03bc}' // mu
+                | '\u{03c0}' // pi
+                | '\u{03c6}' // phi
+                | '\u{03c9}' // omega
+                | '\u{03a9}' // Omega
+                | '\u{221a}' // square root
+                | '\u{211d}' // R
+                | '\u{2124}' // Z
+                | '\u{2070}'..='\u{2079}' // superscript digits
+                | '\u{207b}' // superscript minus
+                | '\u{2080}'..='\u{2089}' // subscript digits
+        )
+    });
+    let has_operator = text.chars().any(|c| {
+        matches!(
+            c,
+            '=' | '+' | '/' | '<' | '>' | '\u{2212}' | '\u{00b7}' | '\u{00d7}'
+                | '\u{2248}' | '\u{2264}' | '\u{2265}'
+        )
+    });
+    has_math_symbol && has_operator
+}
+
+fn space_formula_operators(text: &str) -> String {
+    let mut out = String::with_capacity(text.len() + 8);
+    for ch in text.chars() {
+        if matches!(
+            ch,
+            '=' | '+' | '/' | '<' | '>' | '\u{2212}' | '\u{00b7}' | '\u{00d7}'
+                | '\u{2248}' | '\u{2264}' | '\u{2265}'
+        ) {
+            out.push(' ');
+            out.push(ch);
+            out.push(' ');
+        } else {
+            out.push(ch);
+        }
+    }
+    out.split_whitespace().collect::<Vec<_>>().join(" ")
 }
 
 fn binary_available(name: &str) -> bool {
@@ -269,7 +452,7 @@ pub fn load_from_postgres(cfg: &BuildConfig) -> Result<Vec<Chapter>> {
     .await
     .context("query chapters timed out (30s)")?
     .context("query chapters")?;
-        let chapters: Vec<Chapter> = rows
+        let mut chapters: Vec<Chapter> = rows
             .iter()
             .map(|r| Chapter {
                 slug: r.get::<_, String>("slug"),
@@ -278,10 +461,71 @@ pub fn load_from_postgres(cfg: &BuildConfig) -> Result<Vec<Chapter>> {
                 title: r.get::<_, String>("title"),
                 body_md: r.get::<_, String>("body_md"),
                 illustration_url: r.get::<_, Option<String>>("illustration_url"),
+                secondary_images: Vec::new(),
             })
             .collect();
+
+        // Recover orphan brochure-img-pXXX-YYY.png assets that aren't
+        // referenced by any chapter's illustration_url, and attach each to
+        // the chapter whose hero index immediately precedes it.
+        let asset_names: Vec<String> = tokio::time::timeout(
+            std::time::Duration::from_secs(30),
+            client.query(
+                "SELECT name FROM ssot_brochure.assets \
+                 WHERE name ~ '^brochure-img-p[0-9]+-[0-9]+\\.png$' \
+                 ORDER BY name",
+                &[],
+            ),
+        )
+        .await
+        .map(|r| r.map(|rows| rows.iter().map(|r| r.get::<_, String>("name")).collect()))
+        .unwrap_or_else(|_| Ok(Vec::new()))
+        .unwrap_or_default();
+        attach_orphan_images(&mut chapters, &asset_names);
+
         Ok::<_, anyhow::Error>(chapters)
     })
+}
+
+/// Parse the `YYY` index from `brochure-img-pXXX-YYY.png`.
+fn img_index(name: &str) -> Option<i32> {
+    let stem = name.strip_prefix("brochure-img-")?.strip_suffix(".png")?;
+    let dash = stem.rfind('-')?;
+    stem[dash + 1..].parse().ok()
+}
+
+/// Attach orphan assets to chapters by index proximity: each orphan goes to
+/// the chapter whose hero index is the largest one less than the orphan's.
+pub fn attach_orphan_images(chapters: &mut [Chapter], asset_names: &[String]) {
+    let mut used: std::collections::HashSet<String> = std::collections::HashSet::new();
+    let mut hero_index: Vec<(i32, usize)> = Vec::new();
+    for (i, ch) in chapters.iter().enumerate() {
+        if let Some(url) = &ch.illustration_url {
+            used.insert(url.clone());
+            if let Some(idx) = img_index(url) {
+                hero_index.push((idx, i));
+            }
+        }
+    }
+    hero_index.sort_by_key(|(idx, _)| *idx);
+
+    for name in asset_names {
+        if used.contains(name) {
+            continue;
+        }
+        let Some(idx) = img_index(name) else { continue };
+        // Find largest hero idx strictly less than this orphan idx.
+        let pos = hero_index.partition_point(|(hidx, _)| *hidx < idx);
+        if pos == 0 {
+            // Orphan precedes all heroes — attach to first chapter.
+            if let Some(first) = chapters.first_mut() {
+                first.secondary_images.push(name.clone());
+            }
+        } else {
+            let (_, ch_idx) = hero_index[pos - 1];
+            chapters[ch_idx].secondary_images.push(name.clone());
+        }
+    }
 }
 
 /// Count chapters without loading bodies. Used by `check()` to verify
@@ -475,6 +719,7 @@ pub fn build(cfg: &BuildConfig, loader: &ChapterLoader) -> Result<BuildReport> {
 
     let mut pandoc = Command::new("pandoc");
     pandoc.arg(&md_path).arg("-o").arg(&tex_path);
+    pandoc.arg("--columns=60");
     if let Some(t) = &template_resolved {
         if !t.is_file() {
             return Err(anyhow!("template not found: {}", t.display()));
@@ -506,7 +751,19 @@ pub fn build(cfg: &BuildConfig, loader: &ChapterLoader) -> Result<BuildReport> {
         .replace("\\$\\sim\\$", "\\(\\sim\\)")
         .replace("\\\\texttt{0x47C0}\\\\$", "\\texttt{0x47C0}")
         .replace("\\texttt{0x47C0}\\$", "\\texttt{0x47C0}")
-        .replace("\\setlength{\\tabcolsep}{4pt}", "\\setlength{\\tabcolsep}{1pt}");
+        .replace("\\setlength{\\tabcolsep}{4pt}", "\\setlength{\\tabcolsep}{1pt}")
+        // Inline √2 and √5 are common math literals (golden ratio, etc.)
+        // that pandoc passes through as bare unicode glyphs. Promote them
+        // to proper math-mode \sqrt so the radical sign covers the digit.
+        .replace("(1+√5)/2", "$(1+\\sqrt{5})/2$")
+        .replace("(1-√5)/2", "$(1-\\sqrt{5})/2$")
+        .replace("(1−√5)/2", "$(1-\\sqrt{5})/2$")
+        .replace("1+√5", "$1+\\sqrt{5}$")
+        .replace("1-√5", "$1-\\sqrt{5}$")
+        .replace("1−√5", "$1-\\sqrt{5}$")
+        .replace("√5/2", "$\\sqrt{5}/2$")
+        .replace("√5", "$\\sqrt{5}$")
+        .replace("√2", "$\\sqrt{2}$");
     if tex_fixed != tex_content {
         std::fs::write(&tex_path, tex_fixed)
             .with_context(|| format!("write fixed tex: {}", tex_path.display()))?;
@@ -668,13 +925,18 @@ mod tests {
     use super::*;
 
     fn ch(order: i32, slug: &str, title: &str, body: &str) -> Chapter {
+        ch_kind("essay", order, slug, title, body)
+    }
+
+    fn ch_kind(kind: &str, order: i32, slug: &str, title: &str, body: &str) -> Chapter {
         Chapter {
             slug: slug.into(),
-            kind: "essay".into(),
+            kind: kind.into(),
             order_key: order,
             title: title.into(),
             body_md: body.into(),
             illustration_url: None,
+            secondary_images: Vec::new(),
         }
     }
 
@@ -700,12 +962,81 @@ mod tests {
     }
 
     #[test]
+    fn markdown_orders_book_kinds_before_raw_order_key() {
+        let input = vec![
+            ch_kind("paper1", 10, "paper", "Paper", "body"),
+            ch_kind("frontmatter", 99, "front", "Front", "body"),
+            ch_kind("appx-a", 1, "appendix", "Appendix", "body"),
+        ];
+        let md = render_markdown(&input);
+        let front = md.find("Front").unwrap();
+        let paper = md.find("Paper").unwrap();
+        let appendix = md.find("Appendix").unwrap();
+        assert!(front < paper && paper < appendix);
+    }
+
+    #[test]
     fn markdown_emits_slug_marker_and_h1() {
         let input = vec![ch(1, "intro", "Introduction", "Hello.")];
         let md = render_markdown(&input);
         assert!(md.contains("<!-- chapter: intro -->"));
         assert!(md.contains("# Introduction"));
         assert!(md.contains("Hello."));
+    }
+
+    #[test]
+    fn markdown_repairs_absolute_value_pipes_in_tables() {
+        let body = "\
+| # | Identity | Author | Status |
+|---|---------|--------|--------|
+| A6 | θ_QCD = |φ² + φ⁻² − 3| = 0 | Vasilev | EXACT |
+";
+        let md = render_markdown(&[ch(1, "table", "Table", body)]);
+        assert!(md.contains("θ_QCD = \\|φ² + φ⁻² − 3\\| = 0"));
+        assert!(md.contains("| A6 | θ_QCD"));
+    }
+
+    #[test]
+    fn markdown_adds_break_spaces_to_dense_formula_cells() {
+        let body = "\
+| ID | Formula |
+|----|---------|
+| G01 | 360/φ²−2/φ³+(3φ)⁻⁵ |
+";
+        let md = render_markdown(&[ch(1, "table", "Table", body)]);
+        assert!(md.contains("360 / φ² − 2 / φ³ + (3φ)⁻⁵"));
+    }
+
+    #[test]
+    fn orphan_assets_attach_to_previous_hero_index() {
+        let mut chapters = vec![
+            Chapter {
+                illustration_url: Some("brochure-img-p001-010.png".into()),
+                ..ch(10, "a", "A", "body")
+            },
+            Chapter {
+                illustration_url: Some("brochure-img-p002-020.png".into()),
+                ..ch(20, "b", "B", "body")
+            },
+        ];
+        let assets = vec![
+            "brochure-img-p001-010.png".to_string(),
+            "brochure-img-p001-011.png".to_string(),
+            "brochure-img-p001-012.png".to_string(),
+            "brochure-img-p002-021.png".to_string(),
+        ];
+        attach_orphan_images(&mut chapters, &assets);
+        assert_eq!(
+            chapters[0].secondary_images,
+            vec![
+                "brochure-img-p001-011.png".to_string(),
+                "brochure-img-p001-012.png".to_string()
+            ]
+        );
+        assert_eq!(
+            chapters[1].secondary_images,
+            vec!["brochure-img-p002-021.png".to_string()]
+        );
     }
 
     #[test]
@@ -728,11 +1059,11 @@ mod tests {
     fn resolve_dsn_returns_value_when_env_set() {
         // Use a unique var name so the test doesn't race with anything else.
         let var = "TRIOS_PDF_PIPELINE_TEST_PRESENT";
-        std::env::set_var(var, "postgresql://x/y");
+        std::env::set_var(var, "test-dsn-value");
         let mut cfg = BuildConfig::default();
         cfg.database_url_env = var.into();
         let v = resolve_dsn(&cfg).unwrap();
-        assert_eq!(v, "postgresql://x/y");
+        assert_eq!(v, "test-dsn-value");
         std::env::remove_var(var);
     }
 

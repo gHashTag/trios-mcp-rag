@@ -36,7 +36,7 @@ There is exactly **one** supported renderer chain: **SSOT → Markdown → pando
 
 **Production safety:**
 - The pipeline is **read-only** against Railway/Postgres SSOT. Never `INSERT`/`UPDATE`/`DELETE`.
-- No DSN value, token, or password is ever logged, printed, committed, or embedded in docs. Use placeholders (`postgresql://user:password@host:5432/dbname`) only.
+- No DSN value, token, or password is ever logged, printed, committed, or embedded in docs. Refer to connection strings by environment variable name only (`DATABASE_URL` or `RAILWAY_SSOT_URL`).
 - Public repo docs are English-only.
 
 ## 2. Style lock (TRIOS_PHD_STYLE_LOCK)

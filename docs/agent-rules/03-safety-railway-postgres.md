@@ -2,14 +2,21 @@
 
 ## Default posture: read-only
 
-Every tool exposed by `trios-mcp-rag` today is read-only against the
-SSOT. The agent contract is to keep it that way unless the user
-explicitly authorises a write for a specific change.
+All content and build tools exposed by `trios-mcp-rag` are read-only
+against the SSOT by default. The agent contract is to keep normal usage
+read-only unless the user explicitly authorises a write for a specific
+change.
 
 `search_chapters`, `get_chapter`, `list_chapters`, `forbidden_audit`,
-`build_cover`, and `build_pdf` perform only `SELECT`-class queries.
-Any agent-initiated `INSERT` / `UPDATE` / `DELETE` / DDL is out of
-scope for this repo's standard usage.
+`build_cover`, `build_pdf`, `build_book`, `get_claim_status`,
+`list_claims`, `get_honest_counters`, `preview_chapter_update`, and
+`preview_chapter_insert` perform no SSOT writes. Preview tools may show
+SQL templates but must not execute them.
+
+`backup_ssot` is the only standard tool that can execute DDL, and only
+when called with explicit confirmation. Any agent-initiated `INSERT` /
+`UPDATE` / `DELETE` beyond the backup step is out of scope for this
+repo's standard usage unless the write gate below has been completed.
 
 ## When a write is being considered
 
@@ -57,9 +64,7 @@ Refer to these by **environment variable name only**:
 
 > "Connect using `DATABASE_URL` from the environment."
 
-Not:
-
-> "Connect using `postgresql://user:hunter2@…`."
+Not: "Connect using the literal connection string copied from Railway."
 
 The Rust pipeline in this repo already follows that contract (see
 README → "Production safety"); the agent must do the same.

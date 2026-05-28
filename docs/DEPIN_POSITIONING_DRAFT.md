@@ -1,156 +1,197 @@
-# GOLDEN CHAIN — Armored Provenance Layer for DePIN
 
-> **Status:** Draft — proposed new frontmatter / positioning chapter.
-> **Claim discipline:** Verified citations carry inline source link; positioning
-> claims about TRIOS Three Crowns are labelled `[OPEN CONJECTURE]` or
-> `[EMPIRICAL FIT]` per `docs/agent-rules/04-claim-status.md`.
-> **Market map:** see `docs/CHAIN_OF_CUSTODY_COMPETITORS.md` for the
-> competitor layer analysis behind this positioning.
+# Armoured Provenance Layer for DePIN — Three Crowns as a Trust Co-Processor
 
-## 1. Reframe
+> **Verification rule.** Every external citation is either marked
+> `[verified]` (primary source URL fetched and quoted verbatim during
+> the build of GOLDEN CHAIN v19, 2026-05-25, content cached in
+> `docs/SOURCES_VERIFIED.md`) or omitted. Positioning claims about
+> Three Crowns carry explicit `VERIFIED` / `EMPIRICAL FIT` /
+> `OPEN CONJECTURE` / `ROADMAP` labels per
+> `docs/agent-rules/04-claim-status.md`. UK English throughout.
 
-We are **not** positioning the Three Crowns of TTSKY26b as high-throughput
-inference accelerators. We are positioning them as a **secure provenance
-co-processor for DePIN**: a small, auditable silicon witness that
+## 1. The witness, not the racing car
 
-1. accepts physical data from a device or sensor,
-2. proves that the event came from the claimed origin and is fresh,
-3. signs / hashes a verifiable attestation,
-4. forwards the attestation to a DePIN verifier, oracle, or smart contract,
-5. helps answer the only question that matters for any DePIN reward:
-   *was this a real physical event, or a synthetic one?*
+We position the **Three Crowns of TTSKY26b** as a **hardware witness**
+for DePIN event provenance — a small, auditable silicon component that
+sits **inside an attesting device** and produces a per-event,
+per-device, signed packet which an existing DePIN verifier
+(IoTeX W3bstream, peaq verify, Chainlink, smart contract) can trust
+without trusting the rest of the device firmware.
 
-The metaphor is not a racing car. It is an **armoured cash-in-transit van**:
-not the fastest vehicle, but the one that can be trusted to move value
-across an untrusted street without anything being added, removed, or replaced.
+The chapter uses the single metaphor **witness** throughout; "armoured
+courier" / "cash-in-transit" framings used in earlier drafts have been
+retired to avoid metaphor fatigue.
 
-## 2. Why this is the right gap to occupy
+## 2. Where the gap actually is (not the gap reviewers will assume)
 
-The DePIN literature converges on a single problem: physical-machine data
-must be verifiable before on-chain token economies can be trusted.
+A naïve reader of the DePIN literature will say: *IoTeX W3bstream,
+peaq verify and Chainlink already verify off-chain compute and DePIN
+events — what is left?* The honest answer is:
 
-- **IoTeX W3bstream (verified).** IoTeX states the problem directly:
-  *"the core logic of DePIN projects, specifically the logic that triggers
-  on-chain token economies, is not verifiable by anyone and thus not
-  trusted."* W3bstream is positioned as an *"off-chain verifiable compute
-  protocol designed by IoTeX"* that mitigates *"self-dealing, lazy providers,
-  and malicious responses."*
-  [`docs.iotex.io/depin/iotex-depin-modules/w3bstream/w3bstream-depin-verification`](https://docs.iotex.io/depin/iotex-depin-modules/w3bstream/w3bstream-depin-verification)
+- **W3bstream verifies the off-chain compute step.** It assumes the
+  device-side packet is authentic; it does not itself attest the
+  silicon that produced it. *[verified, see
+  docs.iotex.io/depin/iotex-depin-modules/w3bstream]*
+- **peaq verify Tier 1 (Machine-Origin Authentication)** is the layer
+  closest to ours. peaq says *"data signed directly by the device's
+  private key — highest trust."* It does **not** specify *where the
+  private key lives* or *whether the signing engine is open and
+  reset-anchored*. *[verified, see docs.peaq.xyz/sdk-reference/javascript/verify/verify]*
+- **Chainlink Proof of Reserve** secures **asset reserves**, not
+  device-level event provenance. *[verified, see chain.link/proof-of-reserve]*
 
-- **peaq verify tiers (verified).** peaq's SDK splits verification into
-  three tiers:
-  - *Tier 1 — Machine-Origin Authentication:* data signed directly by the
-    device's private key. Highest trust.
-  - *Tier 2 — Pattern Matching:* incoming data matched against known
-    device patterns.
-  - *Tier 3 — Oracle-Backed:* validated via oracle (residual trust risk).
-  [`docs.peaq.xyz/sdk-reference/javascript/verify/verify`](https://docs.peaq.xyz/sdk-reference/javascript/verify/verify)
+The gap Three Crowns occupies is **inside peaq Tier 1**: the *physical
+guarantee* that the key used to sign was generated, stored, and used
+on a publicly-auditable silicon component whose reset behaviour is
+mechanically proven. That guarantee is what allows W3bstream / Chainlink
+/ peaq verify to be **stronger than they currently are**, not a
+replacement for them. We sit **under** their layer, not against it.
 
-- **Helium Proof-of-Coverage (open conjecture — URL).** Helium's IoT
-  subnet uses Proof-of-Coverage to attest that hotspots are physically
-  providing wireless coverage at a claimed location. The original
-  `docs.helium.com/iot/proof-of-coverage` path has been reorganised;
-  the canonical reference is via the current IoT subnet docs index.
+## 3. Comparison to shipping DePIN hardware
 
-## 3. Where Three Crowns fits — the *armoured courier* role
+The chapter cannot ignore competitors who **already** ship
+hardware-rooted DePIN devices. We are not first; we are differently
+positioned.
 
-The Three Crowns are **not** competing with peaq/IoTeX/Solana for L1 TPS.
-They sit **before** the smart contract, and produce the small, signed,
-provenance-bound packet that those higher-layer protocols verify.
+| Player | What they ship | Provenance basis | What we add |
+|---|---|---|---|
+| **Pebble Tracker** (IoTeX) | sensor tracker | proprietary firmware + signing | open-RTL anchor, Coq-checked reset invariant |
+| **DIMO Macaron** | vehicle dongle | OBD-II + cloud key custody | reset-anchored on-device witness, no cloud trust assumption |
+| **WeatherXM station** | weather kit | per-station signing key | open silicon witness, falsifiable identity |
+| **Helium hotspot** | LoRa hotspot | Proof-of-Coverage protocol | Three Crowns is silicon-level, not protocol-level |
 
-```text
+We do not compete with these on physical sensor coverage, BOM cost, or
+network rewards. We compete on **the falsifiability of the
+device-identity claim**.
+
+## 4. The architecture — honest scope
+
+The end-to-end *vision* is the courier pipeline below. The *implemented
+slice* (today) is only the silicon anchor; the rest is `ROADMAP`.
+
+```
    Sensor / Machine
-        │
-        ▼
-   TRIOS device identity            ─── machine-origin (peaq Tier 1)
-        │
-        ▼
-   secure event sealing             ─── timestamp, nonce, epoch freshness
-        │
-        ▼
-   hash + signature
-   + 0x47C0 reset-time witness      ─── hardware provenance anchor
-        │
-        ▼
-   optional local rule check        ─── pre-prover gate
-        │
-        ▼
-   off-chain prover / oracle        ─── W3bstream / Tier 3 verify
-        │
-        ▼
-   smart contract reward            ─── on-chain settlement
+        v
+   TRIOS device identity            [ROADMAP — PUF-derived secret]
+        v
+   secure event sealing             [ROADMAP — per-event nonce + timestamp]
+        v
+   per-event signature              [ROADMAP — NIST Ascon, on-device]
+   + 0x47C0 reset-time witness      [VERIFIED — Theorem 36.1, Coq-proven]
+        v
+   off-chain prover / oracle        [external — W3bstream / peaq Tier 3]
+        v
+   smart contract reward            [external — on-chain settlement]
 ```
 
-The role of `0x47C0` here is **not** "magic physics". It is the
-**hardware provenance anchor** [VERIFIED][^anchor]: a reset-time
-silicon witness that a packet actually flowed through a specific,
-publicly-auditable hardware contour, not through a server-side fake.
+What is `VERIFIED` today:
 
-[^anchor]: Theorem 36.1 of the compendium, `Three Crowns of TTSKY26b`
-    chapter; the anchor byte at `{uio_out, uo_out}` on reset is the only
-    byte-level property that this brochure claims as `VERIFIED` in the
-    hardware sense.
+- The byte `0x47C0` appears at `{uio_out, uo_out}` immediately on reset,
+  in all three Three Crowns ASICs (Phi #4914, Euler #4915, Gamma #4913),
+  mechanically proven by Theorem 36.1 in the Coq development.
 
-## 4. Standards alignment
+What is **not yet** implemented (and must not be implied):
 
-The architecture is a direct instance of IETF RATS:
+- No on-device PUF (Physical Unclonable Function) is fabricated yet.
+- No on-device NIST Ascon AEAD/hash engine is fabricated yet.
+- No per-event signing pipeline exists in RTL.
 
-- **Attester** → the TRIOS device (sensor + Three Crowns silicon)
-- **Evidence** → the signed, anchored event packet
-- **Verifier** → W3bstream-style off-chain prover (or peaq oracle)
-- **Relying Party** → the DePIN smart contract paying rewards
+This honesty is not a weakness; it is the reason the chapter is
+falsifiable. Any reviewer can verify both the present claim
+(reproduce the anchor byte on the TT shuttle) and the ROADMAP claims
+(track the public PRs that will add PUF, Ascon, signing).
 
-IETF RFC 9334 (Remote Attestation Procedures architecture) defines these
-roles canonically [^rats]. The output of the Verifier is **Attestation
-Results** that *"may contain a boolean value indicating compliance or
-non-compliance with a Verifier's appraisal policy or may carry a richer
-set of Claims about the Attester."* [verbatim from RFC 9334]
+## 5. Threat model — what the witness defends against
 
-Two adjacent technical references that this proposal slots into without
-contradiction:
+| Attack | Three Crowns today | Three Crowns + ROADMAP |
+|---|---|---|
+| Forged device identity | ⚠️ partial — anchor identifies bitstream, not chip-instance | ✅ PUF-derived per-chip secret |
+| Replay of old event | ❌ not defended | ✅ per-event nonce + timestamp window |
+| Substitution of event payload | ❌ not defended | ✅ signature over (payload \|\| nonce \|\| device-id) |
+| Compromised host firmware | ✅ silicon path bypasses firmware | ✅ same |
+| Cloud-side fabrication | ✅ reset anchor cannot be replayed by a cloud service without the silicon | ✅ same |
 
-- **NIST SP 800-232 (Ascon)** — finalised lightweight cryptography standard
-  for resource-constrained devices [^ascon]. Suitable as the AEAD/hash
-  primitive on the device side of the courier.
-- **OpenTitan** — open silicon Root of Trust project [^opentitan]. Three
-  Crowns' role is adjacent but narrower: a *witness*, not a full RoT —
-  we do not claim to replace OpenTitan.
+The honest claim is: **today the witness defends against host
+firmware compromise and cloud fabrication; full courier protection
+against forged-identity and replay attacks ships with the ROADMAP
+items.**
 
-[^rats]: [RFC 9334 — Remote ATtestation procedureS Architecture](https://www.rfc-editor.org/rfc/rfc9334.html)
-[^ascon]: [NIST finalizes lightweight cryptography standard, Aug 2025](https://www.nist.gov/news-events/news/2025/08/nist-finalizes-lightweight-cryptography-standard-protect-small-devices)
-[^opentitan]: [OpenTitan documentation](https://opentitan.org/documentation/index.html)
+## 6. Standards alignment
 
-## 5. Claim discipline — what we will and will not say
+The architecture is an instance of **IETF RATS** (RFC 9334
+Remote Attestation Procedures architecture, *[verified]*):
+
+- **Attester** — TRIOS-anchored device (sensor + Three Crowns silicon)
+- **Evidence** — signed, anchored event packet (ROADMAP)
+- **Verifier** — external off-chain prover (W3bstream / peaq Tier 3)
+- **Relying Party** — DePIN smart contract paying rewards
+
+RFC 9334: *"Attestation Results may contain a boolean value indicating
+compliance or non-compliance with a Verifier's appraisal policy or may
+carry a richer set of Claims about the Attester."*
+
+Adjacent open standards we plan to adopt, **not yet implemented**:
+
+- **NIST SP 800-232 (Ascon)** — finalised lightweight cryptography
+  standard for constrained devices, *[verified at nist.gov, Aug 2025]*.
+  Target AEAD/hash primitive. `ROADMAP`.
+- **OpenTitan** — open silicon Root of Trust, *[verified]*. Three Crowns
+  is **not** a replacement for OpenTitan; it is a **smaller, narrower
+  anchor** suitable where an OpenTitan-scale RoT will not fit. Where
+  both can coexist (e.g. an OpenTitan-equipped host gateway plus
+  TRIOS-anchored leaf sensors), they compose; they do not compete.
+
+## 7. Claim ledger
 
 | Status | Claim |
 |---|---|
-| `VERIFIED` | The anchor byte `0x47C0` appears at `{uio_out, uo_out}` on reset (Theorem 36.1, Coq-proven). |
-| `EMPIRICAL FIT / PROJECTED` | Three Crowns silicon target: ~1 GOPS @ ~50 MHz @ ~1 W (QMTech XC7A100T projection). |
-| `OPEN CONJECTURE` | Three Crowns can serve as a hardware provenance anchor in a DePIN armoured courier role. |
-| **NOT CLAIMED** | "Faster than a GPU" |
-| **NOT CLAIMED** | "Validates the whole DePIN network" |
-| **NOT CLAIMED** | "Proves physical truth" |
-| **NOT CLAIMED** | Replacement for a full silicon root-of-trust (OpenTitan-class). |
+| `VERIFIED` | Anchor byte `0x47C0` at `{uio_out, uo_out}` on reset (Theorem 36.1, Coq-proven, mechanically reproducible on TT SKY130). |
+| `EMPIRICAL FIT` | Three Crowns projected silicon envelope: ~1 GOPS @ ~50 MHz @ ~1 W (QMTech XC7A100T board). |
+| `ROADMAP` | PUF-derived per-device secret. |
+| `ROADMAP` | NIST Ascon on-device AEAD/hash engine. |
+| `ROADMAP` | Per-event signature `sign(payload \|\| nonce \|\| device-id \|\| timestamp)`. |
+| `OPEN CONJECTURE` | The combined `VERIFIED + ROADMAP` stack yields a witness whose Evidence (in IETF RATS terms) is independently falsifiable and reproducible. |
+| `NOT CLAIMED` | Replacement for OpenTitan, IoTeX W3bstream, peaq Tier 1, or Chainlink PoR. We sit *under* them. |
+| `NOT CLAIMED` | Defence against side-channel attacks (power analysis, EM emission) — that is a separate research programme. |
 
-## 6. One-sentence summary for the cover / abstract
+## 8. Scope — where this design fits and where it does not
 
-> The Three Crowns of TTSKY26b are not positioned as high-throughput
-> inference accelerators; they are positioned as an **armoured provenance
-> layer for DePIN** — a small, auditable silicon witness that seals
-> physical-machine data, preserves custody, and produces verifiable
-> evidence before off-chain provers or smart contracts trigger rewards.
+**Fits.** Low-power IoT and DePIN leaf devices where the workload is
+event-attestation, not heavy compute: weather observation, GNSS
+reference reporting, wireless coverage proof, environmental sensors,
+and similar. Power budget ≤ 1 W, packet rate ≤ 1000 events/s, packet
+payload ≤ 4 kB.
 
-## 7. Open questions before SSOT write
+**Does not fit.** High-bandwidth media (Helium video), full
+autonomous-vehicle telemetry, or anywhere a heavyweight OpenTitan-class
+RoT plus a hardware security module is already required by regulation.
+For those, use OpenTitan; we are a smaller component for a smaller niche.
 
-Writing this to `ssot_brochure.chapters` requires explicit confirmation per
-`docs/agent-rules/03-safety-railway-postgres.md`. Before doing so:
+## 9. One-line summary
 
-1. **Insert as new chapter, or amend existing front-matter chapter?**
-   Candidates for amendment: `fm-01-cover`, `fm-06-three-crowns`, or
-   a new `fm-13-depin-positioning` with `order_key` just below the cover.
-2. **Cover subtitle update?** Current cover subtitle reads:
-   *"A Three-Strand Compendium on φ-Structured Physical Constants."*
-   Proposed addition:
-   *"... and an Armoured Provenance Layer for DePIN."*
-3. **Helium PoC citation** — should we link the current IoT subnet docs
-   index, or omit the bullet entirely until a stable URL is found?
+**Three Crowns: a Coq-proven silicon witness for DePIN event
+provenance, sitting under W3bstream / peaq Tier 1.**
+
+## 10. Call to action
+
+- **Reproduce the anchor.** Pull the bitstream for any of Phi
+  (TT #4914), Euler (TT #4915), Gamma (TT #4913), apply reset, observe
+  `0x47C0` at `{uio_out, uo_out}`. If you cannot, the central
+  `VERIFIED` claim of this chapter is falsified and the rest of the
+  positioning collapses.
+- **Cite this work as.** Vasilev, Pellis, Olsen. *GOLDEN CHAIN — A
+  Three-Strand Compendium on φ-Structured Physical Constants*, chapter
+  *Armoured Provenance Layer for DePIN*, 2026.
+  DOI 10.5281/zenodo.19227877.
+- **Engage.** Contact admin@t27.ai for the PUF / Ascon / signing
+  ROADMAP timeline and partnership conditions.
+
+## 11. References (all verified during the v19 build)
+
+- IoTeX W3bstream — <https://docs.iotex.io/depin/iotex-depin-modules/w3bstream/>
+- peaq verify SDK — <https://docs.peaq.xyz/sdk-reference/javascript/verify/verify>
+- Chainlink Proof of Reserve — <https://chain.link/proof-of-reserve>
+- IETF RFC 9334 (RATS) — <https://www.rfc-editor.org/rfc/rfc9334.html>
+- NIST SP 800-232 (Ascon, Aug 2025) — <https://www.nist.gov/news-events/news/2025/08/nist-finalizes-lightweight-cryptography-standard-protect-small-devices>
+- OpenTitan — <https://opentitan.org/documentation/index.html>
+

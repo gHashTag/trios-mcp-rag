@@ -24,7 +24,8 @@
   pdfstartview=FitH,
   unicode=true,
   hidelinks,
-  pdfborder={0 0 0}
+  pdfborder={0 0 0},
+  hypertexnames=false  % use sequential anchor names — avoids xdvipdfmx "@figure.N.M already defined"
 }
 \usepackage{booktabs}
 \usepackage{longtable}
@@ -83,8 +84,24 @@
 \newunicodechar{₇}{\ensuremath{_7}}
 \newunicodechar{ʲ}{\ensuremath{^j}}
 \newunicodechar{√}{\ensuremath{\surd}}
+\newunicodechar{‖}{\ensuremath{\|}}
 \usepackage{amsfonts}
+\usepackage{pifont}
+\newunicodechar{✅}{{\fontfamily{pzd}\selectfont\char"33}}
+\newunicodechar{❌}{{\fontfamily{pzd}\selectfont\char"37}}
+\newunicodechar{⚠}{\textbf{!}}
+\newunicodechar{️}{} % U+FE0F variation selector (emoji presentation) — drop silently
+\newunicodechar{☐}{{\fontfamily{pzd}\selectfont\char"6F}}  % U+2610 empty checkbox → pifont open box
+\newunicodechar{☑}{{\fontfamily{pzd}\selectfont\char"35}}  % U+2611 ballot-box-with-check
+\newunicodechar{☒}{{\fontfamily{pzd}\selectfont\char"36}}  % U+2612 ballot-box-with-X
 \usepackage{tikz}
+\usetikzlibrary{positioning,arrows.meta,shapes.geometric}
+\usepackage[normalem]{ulem}  % provides \sout for strikethrough; pandoc uses \st
+\providecommand{\st}[1]{\sout{#1}}
+% [wave-23] capt-of and caption packages both caused issues:
+% capt-of's \captionof{figure}{} → duplicate "Object @figure.N.N already defined" anchors (18 warnings)
+% caption package → conflicts with pandoc's \LTcaptype{none} for longtables
+% Solution: Lua filter emits caption as plain \footnotesize\itshape paragraph (no counter, no anchor)
 \usepackage{enumitem}
 \setlist[itemize]{leftmargin=1.2em,nosep,topsep=0.2em,partopsep=0pt,parsep=0pt,itemsep=0.05em,midpenalty=1000}
 \setlist[enumerate]{leftmargin=1.4em,nosep,topsep=0.2em,partopsep=0pt,parsep=0pt,itemsep=0.05em,midpenalty=1000}

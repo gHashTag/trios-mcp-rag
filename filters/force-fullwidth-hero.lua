@@ -7,15 +7,34 @@ function Figure(elem)
     if #plain.content == 1 and plain.content[1].t == "Image" then
       local img = plain.content[1]
       if img.classes:includes("secondary") then
-        -- Secondary/context images: tighter footprint so they always fit
-        -- with text on the same page (no lone-banner pages). 0.22 textheight
-        -- (~5cm) keeps the banner visible without dominating; small
-        -- Needspace lets LaTeX move it if even that won't fit.
+        -- Secondary/context images: canonical-tail Pellis triptychs
+        -- need to be **readable** — earlier 0.20\textheight (~5cm)
+        -- shrunk the TARGET/CLAIM/PHI ALGEBRA labels to illegible.
+        -- Match hero-class footprint (0.40\textheight ≈ 10cm) so the
+        -- triptych panels read at arm's length; LaTeX will move the
+        -- image to its own page if the chapter tail can't accommodate.
+        local cap_txt = ''
+        if elem.caption and elem.caption.long then
+          cap_txt = pandoc.utils.stringify(elem.caption.long)
+        end
+        local cap_line = ''
+        if cap_txt ~= '' then
+          cap_txt = cap_txt:gsub('([%%&#_])', '\\%1')
+          -- Plain caption text — no \captionof. Earlier attempts:
+          -- (a) capt-of + \captionof{figure} → 18 "Object @figure.N.N
+          --     already defined" anchor warnings (counter collided across
+          --     chapters).
+          -- (b) caption package → conflict with pandoc's \LTcaptype{none}
+          --     longtable wrappers → build error.
+          -- Plain paragraph: no counter increment, no anchor, no float —
+          -- matches the canonical-tail's caption style anyway.
+          cap_line = '{\\footnotesize\\itshape ' .. cap_txt .. '}'
+        end
         return pandoc.RawBlock('latex',
-          '\\par\\Needspace{0.22\\textheight}\\vspace{0.3em}'
-          .. '\\noindent\\begin{center}\\includegraphics[width=0.92\\textwidth,height=0.20\\textheight,keepaspectratio]{'
-          .. img.src .. '}\\end{center}'
-          .. '\\vspace{0.3em}\\par')
+          '\\par\\Needspace{0.45\\textheight}\\vspace{0.5em}'
+          .. '\\noindent\\begin{center}\\includegraphics[width=\\textwidth,height=0.40\\textheight,keepaspectratio]{'
+          .. img.src .. '}\\\\[3pt]' .. cap_line
+          .. '\\end{center}\\vspace{0.5em}\\par')
       end
       if img.classes:includes("hero") then
         return pandoc.RawBlock('latex',

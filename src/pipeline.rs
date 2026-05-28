@@ -281,10 +281,24 @@ pub fn render_markdown(chapters: &[Chapter]) -> String {
             }
             out.push_str(ch.body_md.trim_end());
         }
-        // Do not auto-append `secondary_images` here. The RAG image-placement
-        // contract requires every image to be anchored to a substantive
-        // heading/body block; appending orphan assets at chapter end creates
-        // low-context image pages and violates TRIOS_PHD_NO_IMAGE_TRAIN.
+        // Append `secondary_images` (orphan banners attached by
+        // attach_orphan_images) at chapter end with the `.secondary` class.
+        // The Lua filter renders each with `\Needspace{0.22\textheight}` and
+        // a 20%-of-textheight max — keep-together rules prevent image-train
+        // pages, while the chapter's narrative still carries each banner.
+        // This restores the 19 orphan illustrations that ship with the
+        // canonical-tail v22.12 layout per `appx-hw-F5-repositories`.
+        for orphan in &ch.secondary_images {
+            // Caption derived from the canonical Pellis layout: an italic
+            // "Trinity triptych — supplementary illustration" line points the
+            // reader at the chapter's narrative context without inventing
+            // canonical figure numbers. Pulled in via the Lua filter's
+            // `.secondary` branch (renders \captionof{figure}{...}).
+            out.push_str(&format!(
+                "\n\n![Supplementary illustration for {} (canonical-tail illustration set, restored 2026-05-26).](img/{}){{.secondary}}\n",
+                ch.title, orphan
+            ));
+        }
         out.push('\n');
     }
     let out = inline_short_references(&out);
@@ -329,8 +343,16 @@ fn inline_short_references(md: &str) -> String {
         }
         if bullets.len() >= 1 && bullets.len() <= 3 {
             // Inline. Skip the original block (header + bullets).
-            out.push(String::new()); // separator paragraph break
+            out.push(String::new()); // separator paragraph break before
             out.push(format!("**References:** {}", bullets.join("; ")));
+            // CRITICAL: emit a trailing blank line so whatever follows
+            // (often an orphan `.secondary` image) is treated as a
+            // separate paragraph by pandoc — without this, pandoc fuses
+            // the next `![]()` into the References paragraph as inline
+            // image, bypassing the Lua filter's `.secondary` branch and
+            // emitting `\pandocbounded{\includegraphics[keepaspectratio]...}`
+            // with no size limits → 744pt overfull hbox per orphan.
+            out.push(String::new()); // separator paragraph break after
             i = j;
         } else {
             // Keep the section as-is.

@@ -23,9 +23,15 @@ See:
 - [AGENT_WAKEUP.md](AGENT_WAKEUP.md) — one-page wake-up card (rules +
   host-specific connection commands + GOLDEN CHAIN PDF build steps)
 - [AGENTS.md](AGENTS.md) — full index of rules
-- [docs/agent-rules/](docs/agent-rules/) — normative rule files
-  (including the new
-  [`07-literature-grounded-refinements.md`](docs/agent-rules/07-literature-grounded-refinements.md))
+- [docs/agent-rules/](docs/agent-rules/) — normative rule files,
+  including
+  [`07-literature-grounded-refinements.md`](docs/agent-rules/07-literature-grounded-refinements.md),
+  [`08-mcp-registration.md`](docs/agent-rules/08-mcp-registration.md),
+  and
+  [`09-audit-and-rag-coverage.md`](docs/agent-rules/09-audit-and-rag-coverage.md)
+  (the GOLDEN CHAIN audit gates).
+- [docs/audits/](docs/audits/) — dated audit artefacts driven by
+  rule 09.8 (`golden-chain-<YYYY-MM-DD>.md`).
 - [docs/literature/](docs/literature/) — 4-track research canon backing
   the refinements
 

@@ -49,6 +49,17 @@ specific change** — defaults do not change without an explicit instruction.
   no-image-train, tectonic pinning, extended language scan) grounded in
   [docs/literature/](docs/literature/) (4-track canon, compiled
   2026-05-29).
+- [docs/agent-rules/08-mcp-registration.md](docs/agent-rules/08-mcp-registration.md)
+  — `claude mcp add` discipline: `-s user` global scope, absolute paths
+  in wrapper `cd`, never pipe `claude mcp add`, reset both scopes before
+  re-adding, restart the host session after register.
+- [docs/agent-rules/09-audit-and-rag-coverage.md](docs/agent-rules/09-audit-and-rag-coverage.md)
+  — Audit & RAG coverage gates: embedding coverage (9.1), embedding
+  freshness (9.2), `alt_text` schema constraint (9.3), illustration
+  coverage (9.4), claim-status sweep (9.5), SSOT hygiene (9.6), RAG
+  canary (9.7), dated audit-artefact requirement (9.8). Derived from the
+  2026-05-29 GOLDEN CHAIN audit
+  ([docs/audits/golden-chain-2026-05-29.md](docs/audits/golden-chain-2026-05-29.md)).
 - [docs/rag/trios-phd-canon.md](docs/rag/trios-phd-canon.md)
   — Canonical TRIOS PhD invariants for RAG / agent retrieval, including
   the `TRIOS_PHD_NO_IMAGE_TRAIN` rule and the accepted PDF QA baseline.
@@ -97,6 +108,18 @@ specific change** — defaults do not change without an explicit instruction.
    non-null `alt_text`, penalty-based no-image-train, tectonic pinning,
    extended language scan). The supporting canon is in
    [docs/literature/](docs/literature/).
+10. **MCP server registration** uses `claude mcp add -s user` with an
+    absolute path in the wrapper `cd`, no piping, reset both scopes
+    before re-adding, restart the host session after register — see
+    [docs/agent-rules/08-mcp-registration.md](docs/agent-rules/08-mcp-registration.md).
+11. **Audit & RAG coverage gates** are normative pre-build checks: zero
+    chapters missing embeddings (9.1), zero stale chunks (9.2), schema
+    `CHECK` on `alt_text` for image / figure / illustration assets
+    (9.3), illustration coverage (9.4), claim-status sweep on long
+    empirical chapters (9.5), SSOT hygiene (9.6), RAG canary (9.7), and
+    a dated audit artefact under
+    [docs/audits/](docs/audits/) (9.8). See
+    [docs/agent-rules/09-audit-and-rag-coverage.md](docs/agent-rules/09-audit-and-rag-coverage.md).
 
 If you cannot satisfy a rule, stop and report. Do not silently relax it.
 

@@ -67,16 +67,46 @@ pandoc --version && tectonic --version
 
 ### Claude Code
 
+> ⚠️ **Use `-s user` (global) — not the default local scope.**
+> Default scope is *local*: the server is registered only for the
+> current directory and is invisible to agents started elsewhere.
+> `-s user` writes the entry to your user config and makes it
+> available in **all** projects / sessions.
+>
+> ⚠️ **Do not pipe `claude mcp add`** (no `echo ... | claude mcp add`).
+> The confirmation prompt gets swallowed and the entry is silently
+> not written.
+>
+> ⚠️ **Use an absolute path** to the working directory — a user-scope
+> entry runs from any cwd, so `./target/...` will break outside the
+> build folder.
+
 ```bash
-claude mcp add trios-mcp-rag \
-  -- sh -c 'set -a && . ./.env && exec ./target/release/trios-mcp-rag'
-claude mcp list
-# Restart your Claude Code session — MCP tools load at session start.
+# Replace /ABS/PATH/trios-mcp-rag with the absolute path to your clone.
+claude mcp add trios-mcp-rag -s user -- \
+  sh -c 'cd /ABS/PATH/trios-mcp-rag && set -a && . ./.env && exec ./target/release/trios-mcp-rag'
+
+claude mcp list                    # trios-mcp-rag … ✓ Connected
+claude mcp get trios-mcp-rag       # Scope: User (available in all your projects)
 ```
 
-The `sh -c '… set -a && . ./.env && exec …'` wrapper keeps the DSN
-out of Claude Code's configuration file — it is resolved from
-`./.env` at server-start time only.
+**Restart the Claude Code session** after registering — MCP tools are
+loaded at session start. Expect 13 tools to appear
+(`search_chapters`, `get_chapter`, `build_pdf`, …).
+
+**Reset / re-register** if a previous (broken) entry exists:
+
+```bash
+claude mcp remove trios-mcp-rag                 # remove user-scope entry
+claude mcp remove trios-mcp-rag --scope local   # remove project-local leftover, if any
+claude mcp list                                  # confirm clean state
+# then re-run the `claude mcp add … -s user …` command above.
+```
+
+The `sh -c 'cd /ABS/PATH && set -a && . ./.env && exec …'` wrapper
+keeps the DSN out of Claude Code's configuration file — it is
+resolved from `./.env` at server-start time only. The leading `cd`
+is required so `./.env` resolves regardless of the agent's cwd.
 
 ### Cursor / Windsurf / opencode
 

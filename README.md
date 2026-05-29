@@ -43,12 +43,42 @@ any host's configuration file. This satisfies rule 4 of
 
 ### Claude Code
 
+> ⚠️ **Use `-s user` (global), not the default local scope.**
+> The default scope is *local* — the server is registered only for the
+> current project directory and is invisible to agents running from
+> anywhere else. Always pass `-s user` so the entry lives in your user
+> config and every project / agent session sees it.
+>
+> ⚠️ **Do not pipe the `add` command** (`echo ... | claude mcp add ...`)
+> — the confirmation prompt gets swallowed and the entry is silently
+> not written. Run it directly.
+>
+> ⚠️ **Use an absolute path to the binary**, not `./target/...` — a
+> user-scope entry is executed from any working directory, so a
+> relative path will fail outside the build folder.
+
 ```bash
-claude mcp add trios-mcp-rag \
-  -- sh -c 'set -a && . ./.env && exec ./target/release/trios-mcp-rag'
-claude mcp list
-# Restart your Claude Code session — MCP tools load at session start.
+# Replace /ABS/PATH/trios-mcp-rag with the absolute path to your clone.
+claude mcp add trios-mcp-rag -s user -- \
+  sh -c 'cd /ABS/PATH/trios-mcp-rag && set -a && . ./.env && exec ./target/release/trios-mcp-rag'
+
+claude mcp list                    # should show: trios-mcp-rag … ✓ Connected
+claude mcp get trios-mcp-rag       # Status: ✓ Connected; Scope: User (available in all your projects)
 ```
+
+**Reset / re-register** if something went wrong (e.g. an earlier local-scope
+entry, a stale test name, or a duplicate):
+
+```bash
+claude mcp remove trios-mcp-rag                 # remove user-scope entry
+claude mcp remove trios-mcp-rag --scope local   # remove project-local leftover, if any
+claude mcp list                                  # confirm empty / single clean entry
+# then re-run the `claude mcp add … -s user …` command above.
+```
+
+**Restart the Claude Code session** after registering — MCP tools are
+loaded at session start. After restart you should see all 13 tools
+(`search_chapters`, `get_chapter`, `build_pdf`, …).
 
 ### Cursor / Windsurf / opencode
 

@@ -40,6 +40,10 @@ HEADER true)`. Load with the same options.
 |-------------------------------|---------------------------------------------------------|--------------|
 | `chapters-post-v12.tsv`       | `7bec06f` (v12 next-wave critic-proof pass)             | `5636ce75…`  |
 
+**v13 and v14 are docs-only audit waves** — the SSOT was not modified,
+and no new snapshot was exported. The post-v12 snapshot remains the
+authoritative offline mirror for both audits.
+
 ## Bootstrap a local Postgres mirror from a snapshot
 
 ```bash

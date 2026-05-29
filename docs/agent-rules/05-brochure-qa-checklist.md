@@ -100,9 +100,11 @@ low-context candidate pages, several of them adjacent — symptoms of
 duplicate "transition" headings that carried hero blocks of their own.
 Removing the transition hero blocks and applying a soft keep-together
 rule (rather than a hard `\clearpage` per section) reduced the
-candidate count to 1 (the title page only) and stabilised the build at
-150 A4 pages with `qpdf --check` clean. See
-`docs/qa/brochure-pdf-checklist.md` for the accepted numeric baseline.
+candidate count to 1 (the title page only) and stabilised the build.
+The **current accepted baseline** (post-v12, 2026-05-29) is
+**69 chapters → 259 A4 pages → 3.5 MB**, with `qpdf --check` clean.
+See `docs/qa/brochure-pdf-checklist.md` for the full numeric baseline
+and `docs/rag/trios-phd-canon.md` §3 for the RAG-mirrored summary.
 
 ## 5. Secret scan
 

@@ -29,14 +29,15 @@ Pass: `qpdf --check` exits 0; `pdfinfo` reports a sensible page count.
 pdfinfo generated/out/main.pdf | awk '/^Pages:/ {print $2}'
 ```
 
-**Accepted baseline: 240 ± 25 A4 pages** (revised 2026-05-29; previously
-150, set when the SSOT had ~30 chapters). Current `ssot_brochure.chapters`
-has 62 rows averaging ~3.9 pp/chapter → ~242 pp. **The decisive signal
-for a hard `\clearpage` regression is row 8 ("very short non-empty
-pages") — not the absolute page count.** A page count outside the band
-*without* a rise in row 8 means the SSOT grew or shrank, not that the
-template broke. A rise in row 8 — even at a page count inside the band —
-is the regression signature; re-check the `TRIOS_PHD_NO_IMAGE_TRAIN`
+**Accepted baseline: 259 A4 pages** (post-v12, 2026-05-29) inside the
+**240 ± 25 band**. Current `ssot_brochure.chapters` has **69 rows**
+averaging ~3.75 pp/chapter → ~259 pp. Previously: 150 pp (~30 chapters,
+v8), 242 pp (62 chapters, v10). **The decisive signal for a hard
+`\clearpage` regression is row 8 ("very short non-empty pages") —
+not the absolute page count.** A page count outside the band *without*
+a rise in row 8 means the SSOT grew or shrank, not that the template
+broke. A rise in row 8 — even at a page count inside the band — is
+the regression signature; re-check the `TRIOS_PHD_NO_IMAGE_TRAIN`
 enforcement and prefer a soft keep-together rule for
 heading + hero + first paragraph(s).
 
@@ -209,7 +210,10 @@ Record in the build's change-log entry:
 
 | #  | Metric                                        | Accepted value           |
 |----|-----------------------------------------------|--------------------------|
-| 2  | Page count (A4)                               | 240 ± 25 (62-chapter SSOT, revised 2026-05-29) |
+| 0  | Chapter count (`ssot_brochure.chapters`)      | 69 (post-v12)            |
+| 2  | Page count (A4)                               | 259 inside 240 ± 25 band |
+| 0  | File size                                     | ~3.5 MB                  |
+| 0  | Reference sha256                              | `6d2e29ed32cc92b4aea32a0c639f7f16c646d94e1aa4adba97787869ec79293d` |
 | 1  | `qpdf --check`                                | clean                    |
 | 3  | Exact duplicate long paragraphs (after exclusions in §3) | 0           |
 | 4  | Duplicate numbered headings                   | 0                        |
@@ -222,8 +226,15 @@ A build that meets this table and clears step 9 is accepted.
 
 **Note on baseline history.** The original 150-page baseline was set
 when `ssot_brochure.chapters` held ~30 rows. The SSOT has since grown
-to 62 chapters, and the table-redefinition fix in build
-`466dab1` (2026-05-29) restored a stable inline-`\chapter` layout. The
-242-page result of that build is the new reference point. **Use row 8
-("very short non-empty pages") — not absolute page count — as the
-primary regression detector.**
+through v9–v12 to 69 chapters; the post-v12 build `f7c36a7`
+(2026-05-29) stabilised at 259 pages / 3.5 MB. **Use row 8 ("very
+short non-empty pages") — not absolute page count — as the primary
+regression detector.** Page count tracks SSOT row count and average
+chapter length, which drift wave to wave; the short-page signal is
+template-driven and binary.
+
+| Wave | Date       | Chapters | Pages | File size | sha256 (first 8) |
+|------|------------|----------|-------|-----------|------------------|
+| v8   | 2026-05    | 30+      | ~150  | n/a       | n/a              |
+| v10  | 2026-05    | 62       | ~242  | n/a       | n/a              |
+| v12  | 2026-05-29 | **69**   | **259** | **3.5 MB** | `6d2e29ed`       |

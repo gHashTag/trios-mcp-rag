@@ -121,8 +121,12 @@ trios-mcp-rag build-pdf \
   --pdf-name "GOLDEN_CHAIN_$(date +%F).pdf"
 ```
 
-Reference baseline build: **88 chapters → 327 pages, ~11 MB, cover
-inserted**, database read **read-only**.
+Reference baseline build (post-v12, 2026-05-29):
+**69 chapters → 259 pages → ~3.5 MB**, cover inserted, database read
+**read-only**. Reference sha256:
+`6d2e29ed32cc92b4aea32a0c639f7f16c646d94e1aa4adba97787869ec79293d`.
+See `docs/qa/brochure-pdf-checklist.md` for the full numeric baseline
+and historical waves (v8 → v10 → v12).
 
 Then run the QA checklist
 ([`docs/qa/brochure-pdf-checklist.md`](docs/qa/brochure-pdf-checklist.md)
@@ -222,13 +226,21 @@ The server expects a `ssot_brochure.chapters` table with columns:
 
 ```sql
 CREATE TABLE ssot_brochure.chapters (
-    slug        TEXT PRIMARY KEY,
-    kind        TEXT NOT NULL,
-    order_key   INT NOT NULL,
-    title       TEXT NOT NULL,
-    body_md     TEXT NOT NULL,
-    word_count  INT NOT NULL DEFAULT 0
+    slug              TEXT PRIMARY KEY,
+    kind              TEXT NOT NULL,
+    order_key         INT  NOT NULL,
+    title             TEXT NOT NULL,
+    body_md           TEXT NOT NULL,
+    illustration_url  TEXT,                        -- nullable; URL or NULL
+    sha256            TEXT,                        -- recomputed by W38 trigger
+    word_count        INT NOT NULL DEFAULT 0,      -- recomputed by W38 trigger
+    byte_size         INT,                         -- octet_length(body_md)
+    format            TEXT,                        -- 'md' default
+    asset_sha         TEXT,                        -- FK to assets registry
+    updated_at        TIMESTAMPTZ DEFAULT now()    -- bumped by W38 trigger
 );
+-- See docs/agent-rules/01-ssot-and-derived-artifacts.md for the
+-- authoritative schema rule. Run `\d ssot_brochure.chapters` to verify.
 ```
 
 ## Connection guides

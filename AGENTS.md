@@ -71,7 +71,8 @@ specific change** — defaults do not change without an explicit instruction.
   the `TRIOS_PHD_NO_IMAGE_TRAIN` rule and the accepted PDF QA baseline.
 - [docs/qa/brochure-pdf-checklist.md](docs/qa/brochure-pdf-checklist.md)
   — Operational pre-publish checklist with the current accepted numeric
-  baseline (150 A4 pages, zero anomaly hits, one image-heavy candidate).
+  baseline (post-v12, 2026-05-29: 69 chapters → 259 A4 pages → 3.5 MB,
+  zero anomaly hits, one image-heavy candidate).
 
 ---
 

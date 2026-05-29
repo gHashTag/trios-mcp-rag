@@ -66,6 +66,12 @@ specific change** — defaults do not change without an explicit instruction.
   canary (9.7), dated audit-artefact requirement (9.8). Derived from the
   2026-05-29 GOLDEN CHAIN audit
   ([docs/audits/golden-chain-2026-05-29.md](docs/audits/golden-chain-2026-05-29.md)).
+- [docs/agent-rules/10-next-wave-workflow.md](docs/agent-rules/10-next-wave-workflow.md)
+  — Normative five-step next-wave pattern (audit → migration → runbook
+  → SSOT snapshot → cross-repo refresh). Captures the v9–v12 workflow
+  so future waves don't reinvent it. Also defines the shared-asset
+  discipline (reuse the same `name=` to enable version history in the
+  Perplexity Computer UI).
 - [docs/rag/trios-phd-canon.md](docs/rag/trios-phd-canon.md)
   — Canonical TRIOS PhD invariants for RAG / agent retrieval, including
   the `TRIOS_PHD_NO_IMAGE_TRAIN` rule and the accepted PDF QA baseline.

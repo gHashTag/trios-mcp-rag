@@ -86,3 +86,39 @@ README → "Production safety"); the agent must do the same.
 Same rules apply to CI: agents must not embed Railway / Postgres
 credentials in workflow files, action inputs, or container build args.
 Use GitHub Actions secrets / Railway-side env injection, by name.
+
+## Known non-paths (do not waste time on these)
+
+These approaches have been tried and do not work. They are documented
+so future agents do not re-attempt them.
+
+### Custom-credentials HTTPS proxy for Postgres TCP
+
+The Perplexity Computer `custom-credentials` mechanism is an HTTPS
+proxy that injects bearer tokens into outbound HTTPS requests. It
+cannot route Postgres TCP traffic (libpq protocol over port 5432) —
+the wire protocols are incompatible. Attempts to set
+`api_credentials=["custom-cred:railway.app"]` for `psql` calls will
+fail at connection time with TLS / handshake errors, not with a clear
+"not supported" message.
+
+**Use one of these instead** (documented in
+`docs/agents/agent-bootstrap.md` §3):
+
+- **Path A — Pipedream PostgreSQL connector.** Routes via Pipedream's
+  managed proxy. Requires the connector to be in CONNECTED state and
+  the DSN refreshed in Settings when it expires.
+- **Path B — Local mirror from TSV snapshot.** Restore
+  `docs/agents/ssot-snapshot/chapters-post-<wave>.tsv` into a local
+  Postgres 17 instance. Read-only; carries 6 columns. Sufficient for
+  RAG queries and PDF rebuilds.
+- **Path C — Local `.env` DSN with shell wrapper.** The standard
+  `set -a && . ./.env && exec ...` pattern used by Claude Code
+  registration (rule 08).
+
+### Direct Railway Postgres from in-browser tools
+
+No browser-side tool (Playwright, browser_task, etc.) can speak
+libpq. The Railway dashboard's web SQL console is the only
+in-browser path, and it lacks the audit / backup discipline this rule
+requires; do not use it for writes.

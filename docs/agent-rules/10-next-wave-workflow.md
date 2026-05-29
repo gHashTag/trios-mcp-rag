@@ -220,6 +220,31 @@ from README/CLAUDE/AGENTS without first checking that the file
 existed (it did not). v16 reconstructed the file and codified the
 rule.
 
+**Executable enforcement (added v17).** Prose discipline was not enough
+— v16 itself orphaned its own audit doc by *creating* the file without
+linking it from any entry point (the inverse failure mode of v15's
+broken-target bug). v17 ships [`scripts/check-link-rot.sh`](../../scripts/check-link-rot.sh)
+with three sub-checks:
+
+  1. **Audit-doc orphan scan** — every `docs/audits/build-*-vNN.md` in
+     the last 5 versions must be referenced from at least one of
+     `README.md`, `CLAUDE.md`, `AGENTS.md`,
+     `docs/agents/agent-bootstrap.md`.
+  2. **Local `.md` link resolution** — every `](path.md)` outside the
+     `skills/` mirror must resolve on disk.
+  3. **Latest-audit pointer freshness** — the `^- Latest audit:` line
+     in `docs/agents/agent-bootstrap.md` must point at the
+     highest-numbered audit on disk.
+
+Exit codes: `0` clean, `1` broken link, `2` orphaned audit, `3` stale
+pointer. Run from the repo root **before** committing any wave that
+adds files under `docs/audits/`, edits the "Recent audits" lists, or
+touches `docs/agents/agent-bootstrap.md`. The pre-commit framework
+(rule 03 §"Bootstrap install") may invoke this script as a local hook,
+but at minimum every wave's verification-gates list MUST include
+`scripts/check-link-rot.sh` exits `0`. v16's orphan failure mode is
+the regression test for this script.
+
 ## Cross-references
 
 - `docs/agents/agent-bootstrap.md` — cross-session entry point.

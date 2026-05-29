@@ -106,8 +106,9 @@
     **TRIOS abstention policy**: prefer "Open conjecture" + falsification
     path over a confidently-wrong upgrade to Verified.
 
-14. **Simhi et al. (2025) — "Trust Me, I'm Wrong: High-Certainty
-    Hallucinations in LLMs" (CHOKE)**
+14. **Simhi, Itzhak, Barez, Stanovsky, Belinkov (2025) — "Trust Me, I'm
+    Wrong: LLMs Hallucinate with Certainty Despite Knowing the Answer"
+    (CHOKE = Certain Hallucinations Overriding Known Evidence)**
     [arXiv:2502.12964](https://arxiv.org/abs/2502.12964).
     Demonstrates that models can hallucinate **with high certainty even
     when they possess the correct knowledge** ("CHOKE" cases), and that

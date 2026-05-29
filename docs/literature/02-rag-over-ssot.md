@@ -67,8 +67,8 @@
     Demonstrates schema-aware retrieval (CARM module) inside a ToT
     framework; relevant to typed chapter-schema retrieval.
 
-11. **Hsieh et al. (2024) — "RULER: What's the Real Context Size of Your
-    Long-Context Language Models?"**
+11. **Hsieh et al. (COLM 2024) — "RULER: What's the Real Context Size of
+    Your Long-Context Language Models?"**
     [arXiv:2404.06654](https://arxiv.org/abs/2404.06654).
     Synthetic long-context benchmark covering retrieval, multi-hop tracing,
     aggregation, and QA across 13 tasks; reveals that effective context for
@@ -91,7 +91,7 @@
     confidence intervals for context relevance, answer faithfulness, and
     answer relevance. Cheaper than human eval and reusable across pipelines.
 
-14. **Zhu et al. (2025) — "RAGEval: Scenario-Specific RAG Evaluation
+14. **Zhu et al. (2024) — "RAGEval: Scenario-Specific RAG Evaluation
     Dataset Generation Framework"**
     [arXiv:2408.01262](https://arxiv.org/abs/2408.01262).
     Generates domain-tailored QA pairs from a schema + seed documents;
@@ -107,23 +107,26 @@
     facts. Relevant to the paragraph-aware chunker introduced in the
     2026-05-29 release.
 
-16. **Li et al. (2025) — "HaystackCraft: Heterogeneous Retrieval-Augmented
-    Generation Distractor Robustness"**
+16. **Li, Fu et al. (2025) — "Haystack Engineering: Context Engineering for
+    Heterogeneous and Agentic Long-Context Evaluation" (HaystackCraft
+    benchmark)**
     [arXiv:2510.07414](https://arxiv.org/abs/2510.07414).
     Stress-tests RAG systems against semantically-similar but factually
     incorrect distractors retrieved alongside true context; a more realistic
-    failure mode than missing-context evaluation.
+    failure mode than missing-context evaluation. "HaystackCraft" is the
+    benchmark name; the paper title is "Haystack Engineering".
 
-17. **Modarressi et al. (2025) — "NoLiMa: Long-Context Evaluation Beyond
-    Literal Matching"**
+17. **Modarressi et al. (ICML 2025) — "NoLiMa: Long-Context Evaluation
+    Beyond Literal Matching"**
     [arXiv:2502.05167](https://arxiv.org/abs/2502.05167).
     Builds long-context benchmarks where the answer cannot be located by
     literal string match, forcing genuine semantic retrieval. Justifies
     using a dense multilingual embedder (paraphrase-multilingual-MiniLM)
     rather than BM25-only retrieval over the SSOT.
 
-18. **Kim et al. (2025) — "ONERULER: Benchmarking Long-Context Language
-    Models with Multilingual RULER"**
+18. **Kim, Russell, Karpinska, Iyyer (2025) — "One ruler to measure them
+    all: Benchmarking multilingual long-context language models" (ONERULER
+    benchmark)**
     [arXiv:2503.01996](https://arxiv.org/abs/2503.01996).
     Multilingual extension of RULER showing material cross-language
     performance gaps. Directly relevant: the TRIOS embedder is multilingual

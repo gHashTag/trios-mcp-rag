@@ -5,10 +5,8 @@
 > peer-reviewed and practitioner literature across four tracks. Each track
 > delivers references, a synthesis, and concrete rule-file recommendations.
 > A cross-cutting section ties all four tracks together.
->
-> **Version 1.2 (2026-05-29 audit).** 47-URL link audit (45 OK, 2 transient
-> non-blocking); +13 new 2024–2025 references across Tracks 2, 3, 4.
-> See `README.md` for full changelog.
+
+---
 
 ---
 
@@ -208,8 +206,8 @@ because no validated publication yet exists to support them.
     Demonstrates schema-aware retrieval (CARM module) inside a ToT
     framework; relevant to typed chapter-schema retrieval.
 
-11. **Hsieh et al. (2024) — "RULER: What's the Real Context Size of Your
-    Long-Context Language Models?"**
+11. **Hsieh et al. (COLM 2024) — "RULER: What's the Real Context Size of
+    Your Long-Context Language Models?"**
     [arXiv:2404.06654](https://arxiv.org/abs/2404.06654).
     Synthetic long-context benchmark covering retrieval, multi-hop tracing,
     aggregation, and QA across 13 tasks; reveals that effective context for
@@ -232,7 +230,7 @@ because no validated publication yet exists to support them.
     confidence intervals for context relevance, answer faithfulness, and
     answer relevance. Cheaper than human eval and reusable across pipelines.
 
-14. **Zhu et al. (2025) — "RAGEval: Scenario-Specific RAG Evaluation
+14. **Zhu et al. (2024) — "RAGEval: Scenario-Specific RAG Evaluation
     Dataset Generation Framework"**
     [arXiv:2408.01262](https://arxiv.org/abs/2408.01262).
     Generates domain-tailored QA pairs from a schema + seed documents;
@@ -248,23 +246,26 @@ because no validated publication yet exists to support them.
     facts. Relevant to the paragraph-aware chunker introduced in the
     2026-05-29 release.
 
-16. **Li et al. (2025) — "HaystackCraft: Heterogeneous Retrieval-Augmented
-    Generation Distractor Robustness"**
+16. **Li, Fu et al. (2025) — "Haystack Engineering: Context Engineering for
+    Heterogeneous and Agentic Long-Context Evaluation" (HaystackCraft
+    benchmark)**
     [arXiv:2510.07414](https://arxiv.org/abs/2510.07414).
     Stress-tests RAG systems against semantically-similar but factually
     incorrect distractors retrieved alongside true context; a more realistic
-    failure mode than missing-context evaluation.
+    failure mode than missing-context evaluation. "HaystackCraft" is the
+    benchmark name; the paper title is "Haystack Engineering".
 
-17. **Modarressi et al. (2025) — "NoLiMa: Long-Context Evaluation Beyond
-    Literal Matching"**
+17. **Modarressi et al. (ICML 2025) — "NoLiMa: Long-Context Evaluation
+    Beyond Literal Matching"**
     [arXiv:2502.05167](https://arxiv.org/abs/2502.05167).
     Builds long-context benchmarks where the answer cannot be located by
     literal string match, forcing genuine semantic retrieval. Justifies
     using a dense multilingual embedder (paraphrase-multilingual-MiniLM)
     rather than BM25-only retrieval over the SSOT.
 
-18. **Kim et al. (2025) — "ONERULER: Benchmarking Long-Context Language
-    Models with Multilingual RULER"**
+18. **Kim, Russell, Karpinska, Iyyer (2025) — "One ruler to measure them
+    all: Benchmarking multilingual long-context language models" (ONERULER
+    benchmark)**
     [arXiv:2503.01996](https://arxiv.org/abs/2503.01996).
     Multilingual extension of RULER showing material cross-language
     performance gaps. Directly relevant: the TRIOS embedder is multilingual
@@ -377,6 +378,8 @@ robustness dimension that the existing canary probes do not cover.
 
 ---
 
+---
+
 ## Track 3 — Claim-Status, Calibration, and Falsifiability for LLM Outputs
 
 ### References
@@ -485,8 +488,9 @@ robustness dimension that the existing canary probes do not cover.
     **TRIOS abstention policy**: prefer "Open conjecture" + falsification
     path over a confidently-wrong upgrade to Verified.
 
-14. **Simhi et al. (2025) — "Trust Me, I'm Wrong: High-Certainty
-    Hallucinations in LLMs" (CHOKE)**
+14. **Simhi, Itzhak, Barez, Stanovsky, Belinkov (2025) — "Trust Me, I'm
+    Wrong: LLMs Hallucinate with Certainty Despite Knowing the Answer"
+    (CHOKE = Certain Hallucinations Overriding Known Evidence)**
     [arXiv:2502.12964](https://arxiv.org/abs/2502.12964).
     Demonstrates that models can hallucinate **with high certainty even
     when they possess the correct knowledge** ("CHOKE" cases), and that
@@ -595,6 +599,8 @@ automatically downgraded to **High-risk**.
    overall on the FACTS Suite — frontier-LLM authorship of a draft
    **does not** raise the claim status of its assertions above
    **Open conjecture** without SSOT or external-DOI corroboration.
+
+---
 
 ---
 
@@ -767,6 +773,8 @@ per-chapter without touching the Lua filter.
    42.1% of documents produce identical output across TeX Live 2020–2023.
    Treat the recorded `sha256` of the PDF, not just "build succeeded",
    as the reproducibility signal.
+
+---
 
 ---
 

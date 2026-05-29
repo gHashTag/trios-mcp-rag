@@ -13,6 +13,10 @@
 \usepackage{graphicx}
 \usepackage{hyperref}
 \usepackage{xurl}
+% Allow line breaks at slash, period, hyphen but never at hyphen-end-of-line that loses the next chunk
+\PassOptionsToPackage{hyphens}{url}
+\renewcommand{\UrlBreaks}{\do\/\do\-\do\.\do\=\do\&\do\?\do\_}
+% Strip trailing dot/comma from inline URLs when rendered by hyperref
 \usepackage{bookmark}
 \hypersetup{
   pdftitle={GOLDEN CHAIN --- Trinity S\textsuperscript{3}AI Compendium},

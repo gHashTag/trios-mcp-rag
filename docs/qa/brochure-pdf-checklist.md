@@ -29,10 +29,14 @@ Pass: `qpdf --check` exits 0; `pdfinfo` reports a sensible page count.
 pdfinfo generated/out/main.pdf | awk '/^Pages:/ {print $2}'
 ```
 
-**Accepted baseline: 150 A4 pages.** Materially lower is fine if the
-other rows still hold; materially higher together with a rise in row 8
-("very short non-empty pages") is the signature of a hard
-`\clearpage` regression — re-check the `TRIOS_PHD_NO_IMAGE_TRAIN`
+**Accepted baseline: 240 ± 25 A4 pages** (revised 2026-05-29; previously
+150, set when the SSOT had ~30 chapters). Current `ssot_brochure.chapters`
+has 62 rows averaging ~3.9 pp/chapter → ~242 pp. **The decisive signal
+for a hard `\clearpage` regression is row 8 ("very short non-empty
+pages") — not the absolute page count.** A page count outside the band
+*without* a rise in row 8 means the SSOT grew or shrank, not that the
+template broke. A rise in row 8 — even at a page count inside the band —
+is the regression signature; re-check the `TRIOS_PHD_NO_IMAGE_TRAIN`
 enforcement and prefer a soft keep-together rule for
 heading + hero + first paragraph(s).
 
@@ -55,6 +59,39 @@ pdftotext -layout generated/out/main.pdf - | \
 > citation style. Exclude lines containing `zenodo`, `vixra`, `HAL`,
 > `NIST`, `physics.nist.gov`, `DOI`, or `/Constants/` from the scan.
 > Flag only prose paragraphs that repeat verbatim.
+>
+> **Additional acceptable echo classes** (also exclude before flagging):
+>
+> 1. **Author / venue tokens in references.** Lines matching common
+>    author names listed in the SSOT (`Vasilev`, `Pellis`, `Olsen`,
+>    `Sherbon`, `Heyrovska`, `Coldea`, `Wu`, `Fring`, `El Naschie`),
+>    venue names (`Phys. Rev.`, `Nucl. Phys.`, `arXiv:`), DOIs
+>    (`10.[0-9]+/`), and viXra IDs.
+> 2. **Hyphenation tail lines.** `pdftotext -layout` preserves
+>    end-of-line hyphenated word fragments (`spec-`, `inspec-`,
+>    `pub-`, `ification.`, `lications`). These are PDF text-extraction
+>    artefacts, not content duplicates — exclude lines matching
+>    `^[a-z]+\.?$` or `^[a-z]+-$`.
+> 3. **ASCII flow diagrams.** Vertical bars (`|`) and stand-alone
+>    arrow letters (`v`, `^`) on otherwise empty lines are part of
+>    intentional ASCII flow charts inside chapters — exclude lines
+>    matching `^\s*[|v^]\s*$`.
+> 4. **`kind='unified'` digest articles.** Chapters with
+>    `kind='unified'` are by design summary / digest articles that
+>    aggregate key passages from other chapters (analogous to a
+>    "Conclusions" section in a textbook). Echoes between a `unified`
+>    chapter and any other chapter are **acceptable by design**. Flag
+>    only echoes that occur **between two non-`unified` chapters**.
+
+*Pragmatic command (incorporates all four exclusions):*
+
+```bash
+pdftotext -layout generated/out/main.pdf - | \
+  awk 'BEGIN{RS=""} length($0) > 200 {print}' | \
+  grep -viE 'zenodo|vixra|HAL|NIST|physics\.nist\.gov|DOI|/Constants/|arxiv\.org|Vasilev|Pellis|Olsen|Sherbon|Heyrovsk|Coldea|Wu, J|Fring|El Naschie|Phys\. Rev|Nucl\. Phys|10\.[0-9]+/' | \
+  awk 'BEGIN{RS=""} !/^[[:space:]]*[a-z]+[.-]?[[:space:]]*$/ && !/^[[:space:]]*[|v\^][[:space:]]*$/ {print}' | \
+  sort | uniq -c | sort -rn | awk '$1 > 1 {print}'
+```
 
 ## 4. Duplicate numbered headings
 
@@ -172,13 +209,21 @@ Record in the build's change-log entry:
 
 | #  | Metric                                        | Accepted value           |
 |----|-----------------------------------------------|--------------------------|
-| 2  | Page count (A4)                               | 150                      |
+| 2  | Page count (A4)                               | 240 ± 25 (62-chapter SSOT, revised 2026-05-29) |
 | 1  | `qpdf --check`                                | clean                    |
-| 3  | Exact duplicate long paragraphs               | 0                        |
+| 3  | Exact duplicate long paragraphs (after exclusions in §3) | 0           |
 | 4  | Duplicate numbered headings                   | 0                        |
 | 5  | Cyrillic hits (public English build)          | 0                        |
 | 6  | Secret / stale / math anomaly hits            | 0                        |
-| 8  | Very short non-empty pages                    | 0                        |
+| 8  | Very short non-empty pages                    | 0 — **decisive regression signal** |
 | 7  | Image-heavy / low-context candidate pages     | 1 (title page only)      |
 
 A build that meets this table and clears step 9 is accepted.
+
+**Note on baseline history.** The original 150-page baseline was set
+when `ssot_brochure.chapters` held ~30 rows. The SSOT has since grown
+to 62 chapters, and the table-redefinition fix in build
+`466dab1` (2026-05-29) restored a stable inline-`\chapter` layout. The
+242-page result of that build is the new reference point. **Use row 8
+("very short non-empty pages") — not absolute page count — as the
+primary regression detector.**

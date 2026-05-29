@@ -925,6 +925,11 @@ pub fn build(cfg: &BuildConfig, loader: &ChapterLoader) -> Result<BuildReport> {
     let mut pandoc = Command::new("pandoc");
     pandoc.arg(&md_path).arg("-o").arg(&tex_path);
     pandoc.arg("--columns=60");
+    // v10: enable smart typography ("X" -> “X”, ' -- ' -> em-dash,
+    // ... -> …) so source can remain ASCII-friendly while output is
+    // typographically correct. Pandoc's smart extension is conservative
+    // inside code spans, math, and raw blocks.
+    pandoc.arg("--from=markdown+smart");
     if let Some(t) = &template_resolved {
         if !t.is_file() {
             return Err(anyhow!("template not found: {}", t.display()));

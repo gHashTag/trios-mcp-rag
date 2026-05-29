@@ -1038,6 +1038,25 @@ pub fn build(cfg: &BuildConfig, loader: &ChapterLoader) -> Result<BuildReport> {
         }
     }
 
+    // Re-inject PDF metadata after the qpdf merge (qpdf --empty drops Info dict
+    // from the source PDFs, so Title/Author/Subject end up blank). Use
+    // exiftool when available; silently skip otherwise (metadata is optional
+    // but strongly recommended for archive accessibility / citation).
+    if binary_available("exiftool") {
+        eprintln!("[build] injecting PDF metadata...");
+        let _ = Command::new("exiftool")
+            .arg("-overwrite_original")
+            .arg("-Title=GOLDEN CHAIN — Trinity S³AI Compendium")
+            .arg("-Author=Dmitrii Vasilev; Stergios Pellis; Scott Olsen")
+            .arg("-Subject=φ-structured physical constants, unification, and silicon verification")
+            .arg("-Keywords=golden ratio; fine-structure constant; symbolic regression; MDL; TRIOS; S3AI; falsification ledger; DePIN; TinyTapeout SKY26b")
+            .arg("-Producer=trios-mcp-rag build-pdf (pandoc + tectonic)")
+            .arg("-Creator=trios-mcp-rag")
+            .arg("-Language=en")
+            .arg(&pdf_path)
+            .status();
+    }
+
     eprintln!("[build] done");
 
     Ok(BuildReport {

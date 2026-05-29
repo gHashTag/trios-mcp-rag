@@ -65,6 +65,18 @@
     TeX floats are algorithmically complex and what tectonic inherits from
     XeTeX's layout model.
 
+11. **Tan & Rigger (ISSTA 2024) — "Inconsistencies in TeX-Produced
+    Documents"**
+    [arXiv:2407.15511](https://arxiv.org/abs/2407.15511) /
+    [ISSTA 2024 DOI 10.1145/3650212.3680370](https://doi.org/10.1145/3650212.3680370).
+    Large-scale empirical study of 432 TeX documents: **only 0.2% compile
+    to identical output under XeTeX vs PDFTeX** and **only 42.1% produce
+    identical output across TeX Live 2020–2023**. Discovered two new
+    LaTeX-package bugs plus five existing bugs fixed independently of
+    the study. Strong empirical backing for the **tectonic version-pin
+    rule** and for treating a tectonic / TeX Live version bump as a
+    pipeline-breaking change.
+
 ### Synthesis
 
 The scholarly PDF pipeline literature reinforces every element of the repo's
@@ -75,7 +87,13 @@ rules with formal backing:
 reproducible builds](https://tectonic-typesetting.github.io/book/latest/introduction/index.html).
 The `CreationDate` discussion (#1228) identifies one remaining non-determinism
 and documents the workaround. Any CI pipeline that does not apply this
-workaround is not reproducible despite using tectonic.
+workaround is not reproducible despite using tectonic. The 2024 ISSTA
+study by [Tan & Rigger](https://arxiv.org/abs/2407.15511) sharpens this:
+across 432 documents, only **0.2%** produced identical output between
+XeTeX and PDFTeX, and only **42.1%** were identical across TeX Live
+2020–2023. A tectonic / TeX Live version bump is therefore not a
+maintenance event — it is a **breaking pipeline change** and must trigger
+a full QA re-run plus an `sha256` re-baseline in the build log.
 
 **Float placement.** LaTeX's float algorithm places figures in a specifier
 priority order: `h` (here), `t` (top), `b` (bottom), `p` (float page). The
@@ -139,6 +157,16 @@ per-chapter without touching the Lua filter.
    correct Unicode rendering and PDF/UA compliance. Font choices must be
    declared as OTF/TTF in the LaTeX preamble, not as legacy LaTeX font
    packages.
+
+7. **Add to `00-canonical-pipeline.md`** (added 2026-05-29 audit): pin
+   the **exact tectonic version** in CI (`tectonic --version` recorded
+   in the build log), and treat any tectonic / TeX Live upgrade as a
+   pipeline-breaking change requiring a fresh `sha256` baseline of the
+   GOLDEN CHAIN PDF. Cite
+   [Tan & Rigger (ISSTA 2024)](https://arxiv.org/abs/2407.15511): only
+   42.1% of documents produce identical output across TeX Live 2020–2023.
+   Treat the recorded `sha256` of the PDF, not just "build succeeded",
+   as the reproducibility signal.
 
 ---
 

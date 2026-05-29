@@ -16,5 +16,21 @@ for the normative rules derived from this canon.
 | [`05-cross-cutting.md`](05-cross-cutting.md) | 9 cross-track recommendations mapped to specific rule files |
 | [`canon-full.md`](canon-full.md) | Single-file copy of the entire canon (~4,100 words) |
 
-*Canon compiled 2026-05-29. Track 1 negative result is dated — re-verify
-before citing as evidence in any public artefact.*
+*Canon compiled 2026-05-29; refreshed 2026-05-29 (v1.2 audit). Track 1
+negative result is dated — re-verify before citing as evidence in any
+public artefact.*
+
+## Changelog
+
+- **v1.2 (2026-05-29)** — 47-URL link audit (45 OK, 2 transient
+  non-blocking); +8 RAG 2024–2025 papers in Track 2 (RULER, RAGBench,
+  ARES, RAGEval, CoFE-RAG, HaystackCraft, NoLiMa, ONERULER); +4
+  calibration / factuality references in Track 3 (FACTS Grounding,
+  FACTS Benchmark Suite, Behaviorally Calibrated RL, CHOKE); +1 PDF
+  reproducibility reference in Track 4 (Tan & Rigger ISSTA 2024 on
+  TeX cross-engine and cross-version inconsistencies).
+- **v1.1 (2026-05-29)** — +2 cross-cutting recommendations driven by
+  the GOLDEN CHAIN audit: build-time SQL coverage / freshness gates,
+  schema-level `alt_text` CHECK constraint.
+- **v1.0 (2026-05-29)** — initial 4-track canon.
+

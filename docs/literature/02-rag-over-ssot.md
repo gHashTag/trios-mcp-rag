@@ -67,6 +67,69 @@
     Demonstrates schema-aware retrieval (CARM module) inside a ToT
     framework; relevant to typed chapter-schema retrieval.
 
+11. **Hsieh et al. (2024) — "RULER: What's the Real Context Size of Your
+    Long-Context Language Models?"**
+    [arXiv:2404.06654](https://arxiv.org/abs/2404.06654).
+    Synthetic long-context benchmark covering retrieval, multi-hop tracing,
+    aggregation, and QA across 13 tasks; reveals that effective context for
+    most production LLMs is far shorter than the advertised window.
+    Relevant to the chapter-chunk sizing decision (3500 chars) and the
+    canary probe set design.
+
+12. **Friel et al. (2024) — "RAGBench: Explainable Benchmark for
+    Retrieval-Augmented Generation Systems"**
+    [arXiv:2407.11005](https://arxiv.org/abs/2407.11005).
+    100k examples across five industry domains with the TRACe metric set
+    (context relevance, utilization, completeness, adherence). Direct
+    successor to RAGAS with domain coverage matching SSOT-grounded use cases.
+
+13. **Saad-Falcon et al. (2024) — "ARES: An Automated Evaluation Framework
+    for Retrieval-Augmented Generation Systems"**
+    [NAACL 2024](https://aclanthology.org/2024.naacl-long.20/) /
+    [arXiv:2311.09476](https://arxiv.org/abs/2311.09476).
+    Trains lightweight LLM judges from synthetic data; PPI-based statistical
+    confidence intervals for context relevance, answer faithfulness, and
+    answer relevance. Cheaper than human eval and reusable across pipelines.
+
+14. **Zhu et al. (2025) — "RAGEval: Scenario-Specific RAG Evaluation
+    Dataset Generation Framework"**
+    [arXiv:2408.01262](https://arxiv.org/abs/2408.01262).
+    Generates domain-tailored QA pairs from a schema + seed documents;
+    introduces Completeness / Hallucination / Irrelevance metrics. Directly
+    applicable to building a TRIOS-specific RAGAS probe set from
+    `ssot_brochure.chapters`.
+
+15. **Liu et al. (2024) — "CoFE-RAG: A Comprehensive Full-chain Evaluation
+    Framework for Retrieval-Augmented Generation with Enhanced Data Diversity"**
+    [arXiv:2410.12248](https://arxiv.org/abs/2410.12248).
+    Evaluates chunking, retrieval, reranking, and generation as one chain
+    rather than as isolated stages; uses multi-granularity keywords as gold
+    facts. Relevant to the paragraph-aware chunker introduced in the
+    2026-05-29 release.
+
+16. **Li et al. (2025) — "HaystackCraft: Heterogeneous Retrieval-Augmented
+    Generation Distractor Robustness"**
+    [arXiv:2510.07414](https://arxiv.org/abs/2510.07414).
+    Stress-tests RAG systems against semantically-similar but factually
+    incorrect distractors retrieved alongside true context; a more realistic
+    failure mode than missing-context evaluation.
+
+17. **Modarressi et al. (2025) — "NoLiMa: Long-Context Evaluation Beyond
+    Literal Matching"**
+    [arXiv:2502.05167](https://arxiv.org/abs/2502.05167).
+    Builds long-context benchmarks where the answer cannot be located by
+    literal string match, forcing genuine semantic retrieval. Justifies
+    using a dense multilingual embedder (paraphrase-multilingual-MiniLM)
+    rather than BM25-only retrieval over the SSOT.
+
+18. **Kim et al. (2025) — "ONERULER: Benchmarking Long-Context Language
+    Models with Multilingual RULER"**
+    [arXiv:2503.01996](https://arxiv.org/abs/2503.01996).
+    Multilingual extension of RULER showing material cross-language
+    performance gaps. Directly relevant: the TRIOS embedder is multilingual
+    MiniLM and the canon includes Russian-language chat / docs, even though
+    public artefacts are English-only.
+
 ### Synthesis
 
 The RAG-over-structured-sources literature converges on three findings that
@@ -92,7 +155,26 @@ shows that RRF over both modalities in the same Postgres instance achieves
 precision / recall / faithfulness / relevancy) that can be run against
 pipeline output without human annotation, enabling automated regression
 testing in CI. Given the repo's existing QA checklists, adding RAGAS metrics
-as a programmatic gate is a natural extension.
+as a programmatic gate is a natural extension. The 2024–2025 wave
+([RAGBench](https://arxiv.org/abs/2407.11005),
+[ARES](https://arxiv.org/abs/2311.09476),
+[RAGEval](https://arxiv.org/abs/2408.01262),
+[CoFE-RAG](https://arxiv.org/abs/2410.12248)) extends this from
+stage-isolated metrics to **full-chain evaluation with synthetic, domain-
+tailored probe generation**, and supplies the methodology for growing the
+TRIOS canary set from 5 to 50+ questions without manual annotation.
+
+**Fourth**, long-context and multilingual evaluation have matured.
+[RULER](https://arxiv.org/abs/2404.06654) and
+[NoLiMa](https://arxiv.org/abs/2502.05167) show that nominal context
+window size systematically overstates the effective retrieval window, and
+that literal-match shortcuts mask retrieval-quality regressions.
+[ONERULER](https://arxiv.org/abs/2503.01996) extends this to multilingual
+settings — relevant because the TRIOS embedder
+(`paraphrase-multilingual-MiniLM-L12-v2`) is multilingual even though the
+public artefacts are English-only.
+[HaystackCraft](https://arxiv.org/abs/2510.07414) adds a distractor-
+robustness dimension that the existing canary probes do not cover.
 
 ### Recommendations
 
@@ -129,6 +211,28 @@ as a programmatic gate is a natural extension.
    documenting the accepted RAGAS metric floor. Any pipeline change that
    drops metrics below the floor must be treated as a regression and must
    not be merged without a written justification.
+
+7. **Extend `05-brochure-qa-checklist.md`** (added 2026-05-29 audit):
+   grow the RAG canary from 5 questions to a **50-question scenario
+   probe set** generated via the
+   [RAGEval](https://arxiv.org/abs/2408.01262) methodology from
+   `ssot_brochure.chapters`. Include at least one
+   [HaystackCraft](https://arxiv.org/abs/2510.07414)-style distractor
+   probe per topic to surface false-positive retrievals.
+
+8. **Add to `03-safety-railway-postgres.md`** (added 2026-05-29 audit):
+   when chunk size or embedding model is changed, run the existing
+   canary plus a [RULER](https://arxiv.org/abs/2404.06654)-style needle-
+   in-haystack probe before merging. Effective context (RULER) often
+   degrades long before nominal context (token count) does, and a chunk-
+   size change can silently break long-chapter retrieval.
+
+9. **Add to `trios-phd-canon.md`** (added 2026-05-29 audit): since the
+   TRIOS embedder is multilingual, run a Russian-language probe pass
+   modelled on [ONERULER](https://arxiv.org/abs/2503.01996) before any
+   public release that includes the bilingual TRIOS PhD README block.
+   Public artefacts remain English-only (rule 06), but the retrieval
+   layer must not silently regress in the maintainer's working language.
 
 ---
 

@@ -27,11 +27,16 @@ See:
   including
   [`07-literature-grounded-refinements.md`](docs/agent-rules/07-literature-grounded-refinements.md),
   [`08-mcp-registration.md`](docs/agent-rules/08-mcp-registration.md),
-  and
   [`09-audit-and-rag-coverage.md`](docs/agent-rules/09-audit-and-rag-coverage.md)
-  (the GOLDEN CHAIN audit gates).
+  (the GOLDEN CHAIN audit gates), and
+  [`10-next-wave-workflow.md`](docs/agent-rules/10-next-wave-workflow.md)
+  (the normative five-step pattern for every critic-proof pass).
 - [docs/audits/](docs/audits/) — dated audit artefacts driven by
-  rule 09.8 (`golden-chain-<YYYY-MM-DD>.md`).
+  rule 09.8 (`golden-chain-<YYYY-MM-DD>.md`) and the next-wave
+  workflow; recent waves:
+  [`build-2026-05-29-v13.md`](docs/audits/build-2026-05-29-v13.md),
+  [`build-2026-05-29-v14.md`](docs/audits/build-2026-05-29-v14.md),
+  [`build-2026-05-29-v15.md`](docs/audits/build-2026-05-29-v15.md).
 - [docs/literature/](docs/literature/) — 4-track research canon backing
   the refinements
 

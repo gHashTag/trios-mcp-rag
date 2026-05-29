@@ -72,6 +72,25 @@ specific change** — defaults do not change without an explicit instruction.
   so future waves don't reinvent it. Also defines the shared-asset
   discipline (reuse the same `name=` to enable version history in the
   Perplexity Computer UI).
+
+### Recent audits
+
+The critic-proof passes that produced the current rule set are
+recorded in [`docs/audits/`](docs/audits/). Read the most recent one
+before opening a new wave — each audit lists the anomalies the
+following wave fixed and the verification gates the wave had to pass.
+
+- [`docs/audits/build-2026-05-29-v13.md`](docs/audits/build-2026-05-29-v13.md)
+  — baseline + schema drift + status-tag drift in literature canon.
+- [`docs/audits/build-2026-05-29-v14.md`](docs/audits/build-2026-05-29-v14.md)
+  — rule 07 internal contradictions, widow / club penalty drift,
+  reproducibility gate, bootstrap non-paths, runbook + snapshot README.
+- [`docs/audits/build-2026-05-29-v15.md`](docs/audits/build-2026-05-29-v15.md)
+  — entry-point doc drift (rules 07–10 missing from README), rules 09
+  / 05 §3 not linking to their implementing scripts, formal
+  Open-conjecture marker regex, hype-scan context exclusions,
+  `.pre-commit-config.yaml` / `.gitleaks.toml` reference,
+  local-mirror schema subset note.
 - [docs/rag/trios-phd-canon.md](docs/rag/trios-phd-canon.md)
   — Canonical TRIOS PhD invariants for RAG / agent retrieval, including
   the `TRIOS_PHD_NO_IMAGE_TRAIN` rule and the accepted PDF QA baseline.

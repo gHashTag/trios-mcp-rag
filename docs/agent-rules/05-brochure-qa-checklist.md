@@ -17,6 +17,28 @@ botched merge or a re-run that appended instead of replacing.
 - Any count > 1 needs an explicit reason (e.g. "Preface" appearing
   twice is wrong; "Appendix A.1" appearing twice is wrong).
 
+**Reference implementation:**
+[`scripts/qa_duplicate_prose.py`](../../scripts/qa_duplicate_prose.py)
+covers duplicate **paragraph** detection (one level deeper than the
+heading-level scan above) and applies four exclusion classes
+so the scan stays signal-rich:
+
+  1. **Bibliographic tokens** — zenodo / vixra / HAL / NIST / DOI
+     patterns and known author / venue strings (legitimately
+     repeated across reference lists).
+  2. **`pdftotext` hyphenation tail lines** — fragments like
+     `spec-` / `ification.` produced by line-wrap reflow.
+  3. **ASCII flow-diagram bars** — `|`, `v`, `^` repeats from
+     box-drawing diagrams.
+  4. **Cross-chapter echoes involving digest chapters**
+     (`kind = 'unified'`) — digest chapters re-state prose from
+     source chapters by design.
+
+Exit code 0 = clean, 1 = real duplicates found. The operational
+form of this check lives in
+[`docs/qa/brochure-pdf-checklist.md`](../qa/brochure-pdf-checklist.md)
+§3.
+
 ## 2. Stale-marker scan
 
 Goal: catch leftover scaffolding from drafting.

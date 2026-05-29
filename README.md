@@ -9,7 +9,9 @@ Exposes MCP tools that let AI agents (Claude Code, Cursor, Windsurf, opencode, e
 > Railway Postgres SSOT. The full rule set lives in
 > [`docs/agent-rules/`](docs/agent-rules/) and covers the canonical
 > pipeline, SSOT discipline, PDF style, write-safety, claim-status
-> framing, brochure QA, and language policy.
+> framing, brochure QA, language policy, literature-grounded
+> refinements, MCP registration, audit-and-RAG-coverage gates, and the
+> next-wave-workflow pattern.
 >
 > **TL;DR for new sessions:** open [`AGENT_WAKEUP.md`](AGENT_WAKEUP.md)
 > for a one-page wake-up card (rules + connection commands for every
@@ -17,6 +19,31 @@ Exposes MCP tools that let AI agents (Claude Code, Cursor, Windsurf, opencode, e
 > [`docs/agents/agent-bootstrap.md`](docs/agents/agent-bootstrap.md)
 > for the full bootstrap — skill loading, repo map, three Postgres SSOT
 > connection paths, build + QA workflow, MCP registration recipe.
+
+---
+
+## Rule Index
+
+The normative rule files in [`docs/agent-rules/`](docs/agent-rules/)
+are numbered. New contributors and external readers should skim the
+full index — every rule was added in response to a real audit
+finding. Curated audits live in [`docs/audits/`](docs/audits/);
+recent ones include
+[`build-2026-05-29-v13.md`](docs/audits/build-2026-05-29-v13.md),
+[`build-2026-05-29-v14.md`](docs/audits/build-2026-05-29-v14.md), and
+[`build-2026-05-29-v15.md`](docs/audits/build-2026-05-29-v15.md).
+
+- [`00-canonical-pipeline.md`](docs/agent-rules/00-canonical-pipeline.md) — Rust + pandoc + tectonic is the only supported renderer.
+- [`01-ssot-and-derived-artifacts.md`](docs/agent-rules/01-ssot-and-derived-artifacts.md) — Postgres `ssot_brochure.chapters` is authoritative; files are derived.
+- [`02-pdf-style.md`](docs/agent-rules/02-pdf-style.md) — white academic title page, serif typography, S³AI hero panels, no teal corporate covers.
+- [`03-safety-railway-postgres.md`](docs/agent-rules/03-safety-railway-postgres.md) — read-only by default; writes require backup, dry-run, explicit `go ahead`; no DSN / token leakage.
+- [`04-claim-status.md`](docs/agent-rules/04-claim-status.md) — Verified / Empirical fit / Open conjecture / High-risk / Retracted; no Nobel claims as deliverables.
+- [`05-brochure-qa-checklist.md`](docs/agent-rules/05-brochure-qa-checklist.md) — pre-publish QA: duplicates, stale markers, secrets, language, qpdf / pdfinfo / pdftotext.
+- [`06-language-policy.md`](docs/agent-rules/06-language-policy.md) — public repo artefacts are English-only.
+- [`07-literature-grounded-refinements.md`](docs/agent-rules/07-literature-grounded-refinements.md) — RAGAS CI thresholds, `falsification_path` gate, `alt_text` non-null, tectonic pinning, each with explicit `Status:` line.
+- [`08-mcp-registration.md`](docs/agent-rules/08-mcp-registration.md) — `-s user`, absolute wrapper path, no piped install, reset scopes before re-adding, restart host.
+- [`09-audit-and-rag-coverage.md`](docs/agent-rules/09-audit-and-rag-coverage.md) — embedding coverage, stale-embedding detector, schema-vs-rule consistency, claim-status sweep. Reference implementation: [`scripts/verify-ssot-integrity.sh`](scripts/verify-ssot-integrity.sh).
+- [`10-next-wave-workflow.md`](docs/agent-rules/10-next-wave-workflow.md) — normative five-step pattern for every critic-proof pass: forensic audit → migration SQL → runbook → SSOT snapshot → cross-repo refresh.
 
 ---
 

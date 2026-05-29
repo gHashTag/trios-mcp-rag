@@ -113,6 +113,16 @@ pdftotext -layout generated/out/main.pdf - | \
   sort | uniq -c | sort -rn | awk '$1 > 1 {print}'
 ```
 
+**Reference implementation:**
+[`scripts/qa_duplicate_prose.py`](../../scripts/qa_duplicate_prose.py)
+encodes the four exclusion classes above as Python regexes and a
+slug-set for the `kind='unified'` digest exemption. Run it as
+`python3 scripts/qa_duplicate_prose.py generated/out/main.pdf`
+(exit 0 = clean, 1 = real duplicates). The normative rule for this
+check lives in
+[`docs/agent-rules/05-brochure-qa-checklist.md`](../agent-rules/05-brochure-qa-checklist.md)
+§1.
+
 ## 4. Duplicate numbered headings
 
 Goal: catch repeated numbered headings (e.g. two "3.2 …").

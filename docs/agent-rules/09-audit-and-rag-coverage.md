@@ -12,6 +12,37 @@ The rule applies whenever an agent touches `ssot_brochure.*`, runs a
 `build-pdf` cycle, rebuilds embeddings, ingests new chapters, or
 publishes a derived artefact (PDF, brochure, README, article).
 
+## Implementation
+
+Reference implementation in this repo:
+[`scripts/verify-ssot-integrity.sh`](../../scripts/verify-ssot-integrity.sh).
+
+The script runs nine non-zero-exit invariants that map 1:1 to the
+subsections below and to the waves 30–35 provenance commits:
+
+  1. `ssot_brochure.chapters.sha256` column present and populated
+     for every row (→ §9.6 SSOT hygiene).
+  2. `ssot_brochure.chapters.word_count` column present and
+     non-negative for every row.
+  3. `illustration_url` foreign-key consistency against
+     `ssot_brochure.assets` (→ §9.4 illustration coverage).
+  4. `ssot_brochure.assets.byte_size` non-null, non-negative.
+  5. `ssot_brochure.assets.sha256` non-null and 64-hex.
+  6. `ssot_brochure.assets.chapter_slug` non-null FK back into
+     `chapters.slug` (→ anti-orphan provenance).
+  7. Every chapter row has `format = 'markdown'` (no silent format
+     drift).
+  8. `chapters.updated_at` trigger present and firing.
+  9. `chapters.body_md` cross-reference fan-out (every internal
+     anchor resolves; no dangling `#slug` links).
+
+A wave that adds a new schema column or trigger MUST add the matching
+invariant to the script in the same commit. The script is the only
+sanctioned place where rule 09 leaves the documentation layer and
+becomes executable, and CI runs it before any `build-pdf`. Embedding
+coverage / freshness (§9.1 / §9.2) live in a separate Python check
+and are not in scope of `verify-ssot-integrity.sh`.
+
 ---
 
 ## 9.1 — Embedding coverage gate (P0, hard)

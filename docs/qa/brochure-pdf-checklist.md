@@ -311,3 +311,5 @@ template-driven and binary.
 | v12  | 2026-05-29 | **69**   | **259** | **3.5 MB** | `6d2e29ed`     | rebuild            |
 | v13  | 2026-05-29 | 69       | 259   | 3.5 MB    | `6d2e29ed`       | audit-only, no rebuild |
 | v14  | 2026-05-29 | 69       | 259   | 3.5 MB    | `6d2e29ed`       | audit-only, no rebuild |
+| v15  | 2026-05-29 | 69       | 259   | 3.5 MB    | `6d2e29ed`       | audit-only, no rebuild |
+| v16  | 2026-05-29 | 69       | 259   | 3.5 MB    | `6d2e29ed`       | audit-only, no rebuild |

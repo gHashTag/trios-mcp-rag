@@ -69,6 +69,20 @@ textbook generation — is listed below.
    Profiles hardware bottlenecks; underscores why a Rust-native pipeline
    (rather than Python) matters for scalable symbolic document rendering.
 
+9. **Sultan, Thuraisamy, Rajaratnam (2026) — "NeuSymMS: A Hybrid
+   Neuro-Symbolic Memory System for Persistent, Self-Curating LLM Agents"**
+   [arXiv:2605.17596](https://arxiv.org/abs/2605.17596).
+   Couples neural fact extraction from unstructured dialogue with a
+   CLIPS-based expert system for classification, deduplication, and
+   reconciliation under explicit lifecycle rules. Stores knowledge as
+   **subject–relation–value triples in a relational database**, with
+   user / agent / agent-to-agent scoping and a dual-horizon short-term /
+   long-term memory model using access-based promotion and time-based
+   pruning. This is the closest 2026 production-NeSy parallel to the
+   TRIOS architecture: relational SSOT as the symbolic layer, LLM as the
+   neural extractor, and auditable lifecycle rules as the operational
+   counterpart to TRIOS's claim-status labels.
+
 ### Synthesis
 
 No published paper exists under the TRIOS / S³AI / GOLDEN BRIDGE name.

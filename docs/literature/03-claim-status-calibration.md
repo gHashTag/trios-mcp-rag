@@ -18,13 +18,15 @@
    knowledge source. The atomic-fact decomposition maps cleanly onto
    individual claims within a TRIOS chapter.
 
-3. **Chern et al. (2023) — "FELM: Benchmarking Factuality Evaluation of
-   Large Language Models"**
+3. **Chen, Zhao, Zhang, Chern et al. (2023) — "FELM: Benchmarking Factuality
+   Evaluation of Large Language Models"**
    [NeurIPS 2023 D&B Track](https://neurips.cc/virtual/2023/poster/73491) /
    [arXiv:2310.00741](https://arxiv.org/abs/2310.00741).
    Fine-grained segment-level annotation across math, world-knowledge, and
-   reasoning; GPT-4 F1 of only 48.3% shows retrieval-augmented evaluators
-   still underperform.
+   reasoning. Best evaluator (ChatGPT + retrieval) reaches only **48.3%
+   segment-level F1** in the most favourable setting (Table 4, Content
+   F1) — not an overall benchmark score; retrieval-augmented evaluators
+   still underperform across most segments and domains.
 
 4. **Li et al. (2023) — "HaluEval: A Large-Scale Hallucination Evaluation
    Benchmark"**
@@ -65,11 +67,14 @@
    Translates Popperian falsifiability into a practitioner rubric that
    cleanly maps to the five-level TRIOS claim taxonomy.
 
-10. **OpenReview (2025) — POPPER: Automated Hypothesis Validation via
-    Falsification Experiments**
+10. **Huang, Jin, R. Li, M. Y. Li, Candes, Leskovec (ICML 2025) —
+    "Automated Hypothesis Validation with Agentic Sequential Falsifications"
+    (POPPER)**
     [OpenReview iTevNo8PzG](https://openreview.net/forum?id=iTevNo8PzG).
-    AI agent that designs falsification experiments for free-form hypotheses;
-    10× faster than human scientists on biological domains.
+    Agentic framework that designs sequential falsification experiments for
+    free-form hypotheses, reducing experimental time by **10 folds** on
+    biological domains while preserving Type-I error control. ICML 2025
+    poster.
 
 11. **Jacovi et al. (2025) — "The FACTS Grounding Leaderboard: Benchmarking
     LLMs' Ability to Ground Responses to Long-Form Input" (Google DeepMind /

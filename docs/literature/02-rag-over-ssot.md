@@ -37,8 +37,8 @@
    Proves that contrastive in-context learning over experience memory
    significantly improves Text-to-SQL and TableQA (+17.2% on hard tasks).
 
-6. **Liang et al. (2024) — "KAG: Boosting LLMs via Knowledge Augmented
-   Generation"**
+6. **Liang et al. (2024) — "KAG: Boosting LLMs in Professional Domains via
+   Knowledge Augmented Generation"**
    [arXiv:2409.13731](https://arxiv.org/abs/2409.13731).
    Combines KG structure + vector retrieval with bidirectional LLM–KG
    enhancement. Directly relevant to `ssot_brochure.chapters` as a typed
@@ -56,7 +56,7 @@
    achieves ~84% retrieval precision vs ~62% for vector-only.
 
 9. **Roy et al. (2024) — "RAGONITE: Iterative Retrieval on Induced Databases
-   and Verbalized RDF for Conversational QA"**
+   and Verbalized RDF for Conversational QA over KGs with RAG"**
    [arXiv:2412.17690](https://arxiv.org/abs/2412.17690).
    Two-pronged SQL + vector RAG with iterative retrieval; validates hybrid
    structured + semantic retrieval for knowledge-graph corpora.

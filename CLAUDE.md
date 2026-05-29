@@ -20,8 +20,14 @@ Quick summary of the hard rules:
 
 See:
 
+- [AGENT_WAKEUP.md](AGENT_WAKEUP.md) — one-page wake-up card (rules +
+  host-specific connection commands + GOLDEN CHAIN PDF build steps)
 - [AGENTS.md](AGENTS.md) — full index of rules
 - [docs/agent-rules/](docs/agent-rules/) — normative rule files
+  (including the new
+  [`07-literature-grounded-refinements.md`](docs/agent-rules/07-literature-grounded-refinements.md))
+- [docs/literature/](docs/literature/) — 4-track research canon backing
+  the refinements
 
 When a chat instruction conflicts with these rules, the rules win unless
 the user explicitly overrides them for the specific change in the same

@@ -43,6 +43,12 @@ specific change** — defaults do not change without an explicit instruction.
 - [docs/agent-rules/06-language-policy.md](docs/agent-rules/06-language-policy.md)
   — Public repo artefacts are English-only at the time of writing.
   Chat with the maintainer may be Russian.
+- [docs/agent-rules/07-literature-grounded-refinements.md](docs/agent-rules/07-literature-grounded-refinements.md)
+  — 9 refinements (RAGAS gate, `falsification_path`, adjacent-literature
+  anchoring, index hygiene, label propagation, `alt_text`, penalty-based
+  no-image-train, tectonic pinning, extended language scan) grounded in
+  [docs/literature/](docs/literature/) (4-track canon, compiled
+  2026-05-29).
 - [docs/rag/trios-phd-canon.md](docs/rag/trios-phd-canon.md)
   — Canonical TRIOS PhD invariants for RAG / agent retrieval, including
   the `TRIOS_PHD_NO_IMAGE_TRAIN` rule and the accepted PDF QA baseline.
@@ -84,5 +90,16 @@ specific change** — defaults do not change without an explicit instruction.
    regression. See
    [docs/rag/trios-phd-canon.md](docs/rag/trios-phd-canon.md) and
    rule 02 for the canonical phrasing.
+9. **Literature-grounded refinements** are normative — see
+   [docs/agent-rules/07-literature-grounded-refinements.md](docs/agent-rules/07-literature-grounded-refinements.md)
+   for the 9 items (RAGAS gate, `falsification_path`,
+   adjacent-literature anchoring, index hygiene, label propagation,
+   non-null `alt_text`, penalty-based no-image-train, tectonic pinning,
+   extended language scan). The supporting canon is in
+   [docs/literature/](docs/literature/).
 
 If you cannot satisfy a rule, stop and report. Do not silently relax it.
+
+For a one-page wake-up card with host-specific connection commands
+(Claude Code, Cursor, Windsurf, opencode, Perplexity Computer, generic
+MCP), see [AGENT_WAKEUP.md](AGENT_WAKEUP.md).

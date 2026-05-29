@@ -23,19 +23,23 @@ textbook generation — is listed below.
 
 2. **Platzer (2024) — "Intersymbolic AI: Interlinking Symbolic AI and
    Subsymbolic AI"**
-   [arXiv:2406.11563](https://arxiv.org/abs/2406.11563) / IJCAI 2024.
-   Defines a principled taxonomy for systems that move between symbolic
-   meaning and neural effect — directly relevant to "S³AI" framing.
+   [arXiv:2406.11563](https://arxiv.org/abs/2406.11563).
+   Perspective piece defining a principled taxonomy for systems that move
+   between symbolic meaning and neural effect — directly relevant to
+   "S³AI" framing.
 
 3. **Renkhoff et al. (2024) — "A Survey on Verification and Validation,
-   Testing and Evaluations of Neurosymbolic AI"**
-   [arXiv:2401.03188](https://arxiv.org/abs/2401.03188), IEEE Trans. AI.
+   Testing and Evaluations of Neurosymbolic Artificial Intelligence"**
+   [arXiv:2401.03188](https://arxiv.org/abs/2401.03188) /
+   [doi:10.1109/TAI.2024.3351798](https://doi.org/10.1109/TAI.2024.3351798)
+   (IEEE Transactions on Artificial Intelligence).
    Reviews how symbolic components can be used to *test and validate* neural
    predictions — the V&V layer that TRIOS's claim-status framing aspires to.
 
-4. **Wang et al. (2025) — "Imperative Learning: A Self-supervised
-   Neuro-Symbolic Learning Framework for Robot Autonomy"**
-   [arXiv:2406.16087](https://arxiv.org/abs/2406.16087).
+4. **Wang et al. (IJRR 2025; arXiv 2024) — "Imperative Learning: A
+   Self-supervised Neuro-Symbolic Learning Framework for Robot Autonomy"**
+   [arXiv:2406.16087](https://arxiv.org/abs/2406.16087) (v1 Jun 2024) /
+   International Journal of Robotics Research, 2025.
    Introduces a bilevel optimisation framing: neural module, symbolic
    reasoning engine, memory system — a structural parallel to TRIOS's
    Postgres SSOT + Rust renderer + LLM agent triad.
@@ -46,8 +50,9 @@ textbook generation — is listed below.
    Demonstrates self-learning from KG-structured memory — a pattern
    applicable to the compendium's chapter-as-node retrieval model.
 
-6. **Disi-UNIBO NeSy Survey (IJCAI 2025) — "Neuro-Symbolic Artificial
-   Intelligence: A Task-Directed Survey"**
+6. **Delvecchio, Molfetta, Moro (IJCAI 2025, Survey Track) —
+   "Neuro-Symbolic Artificial Intelligence: A Task-Directed Survey in the
+   Black-Box Models Era"** (DISI, University of Bologna)
    [IJCAI 2025 Proceedings](https://www.ijcai.org/proceedings/2025/1157.pdf).
    Provides a task-oriented NeSy taxonomy and a public reproducibility
    index for each surveyed work — a model for TRIOS's own validation
@@ -58,8 +63,9 @@ textbook generation — is listed below.
    [doi:10.1016/j.neucom.2025.131269](https://linkinghub.elsevier.com/retrieve/pii/S0925231225019411),
    Neurocomputing. Explores SSL for neuro-symbolic context binding.
 
-8. **Wan et al. (2024) — Workload Characterization of Neuro-Symbolic AI**
-   [ISPASS 2024](https://zishenwan.github.io/publication/ISPASS24_NSAI.pdf).
+8. **Wan et al. (ISPASS 2024) — "Workload and Characterization of
+   Neuro-Symbolic AI"**
+   [ISPASS 2024 PDF](https://zishenwan.github.io/publication/ISPASS24_NSAI.pdf).
    Profiles hardware bottlenecks; underscores why a Rust-native pipeline
    (rather than Python) matters for scalable symbolic document rendering.
 

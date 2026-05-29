@@ -61,11 +61,13 @@
    Two-pronged SQL + vector RAG with iterative retrieval; validates hybrid
    structured + semantic retrieval for knowledge-graph corpora.
 
-10. **Zhang et al. (EMNLP 2025) — "ConstraintLLM: A Neuro-Symbolic Framework
-    for Constraint Programming"**
-    [ACL Anthology EMNLP 2025](https://aclanthology.org/2025.emnlp-main.809).
-    Demonstrates schema-aware retrieval (CARM module) inside a ToT
-    framework; relevant to typed chapter-schema retrieval.
+10. **Shi et al. (EMNLP 2025) — "ConstraintLLM: A Neuro-Symbolic Framework
+    for Industrial-Level Constraint Programming"**
+    [ACL Anthology EMNLP 2025](https://aclanthology.org/2025.emnlp-main.809/).
+    Introduces the Constraint-Aware Retrieval Module (CARM) inside a
+    Tree-of-Thoughts framework with guided self-correction; the typed-retrieval
+    pattern over constraint schemas is directly analogous to typed retrieval
+    over the `ssot_brochure.chapters` schema.
 
 11. **Hsieh et al. (COLM 2024) — "RULER: What's the Real Context Size of
     Your Long-Context Language Models?"**

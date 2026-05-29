@@ -34,9 +34,9 @@
    summarisation; provides hallucination taxonomy that maps to
    **High-risk** and **Retracted** claim statuses.
 
-5. **Xu, Jain & Kankanhalli (2025) — "Hallucination is Inevitable: An
+5. **Xu, Jain & Kankanhalli (2024) — "Hallucination is Inevitable: An
    Innate Limitation of Large Language Models"**
-   [arXiv:2401.11817](https://arxiv.org/abs/2401.11817).
+   [arXiv:2401.11817](https://arxiv.org/abs/2401.11817) (v1 22 Jan 2024).
    Formal proof (via learning theory) that hallucination cannot be eliminated.
    Grounds the repo's design decision to label rather than suppress
    uncertain claims.

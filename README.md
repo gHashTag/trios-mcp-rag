@@ -10,6 +10,91 @@ Exposes MCP tools that let AI agents (Claude Code, Cursor, Windsurf, opencode, e
 > [`docs/agent-rules/`](docs/agent-rules/) and covers the canonical
 > pipeline, SSOT discipline, PDF style, write-safety, claim-status
 > framing, brochure QA, and language policy.
+>
+> **TL;DR for new sessions:** open [`AGENT_WAKEUP.md`](AGENT_WAKEUP.md)
+> for a one-page wake-up card (rules + connection commands for every
+> host).
+
+---
+
+## Quickstart — wake up an AI agent
+
+Get any MCP-aware AI agent (Claude Code, Cursor, Windsurf, opencode,
+Perplexity Computer) into the same operating posture as the rules in
+[`AGENTS.md`](AGENTS.md), then print a fresh GOLDEN CHAIN PDF.
+
+### Common prerequisites
+
+```bash
+# 1. Build (or use the prebuilt) MCP server binary
+cargo build --release
+
+# 2. Provide DSN locally via .env — NEVER commit it
+cp .env.example .env
+# edit .env, set TRIOS_DATABASE_URL (or DATABASE_URL) — env-var name only
+
+# 3. Confirm pandoc + tectonic are on PATH
+pandoc --version && tectonic --version
+```
+
+The `.env` file is read at server-start time only; the DSN never enters
+any host's configuration file. This satisfies rule 4 of
+[`AGENTS.md`](AGENTS.md).
+
+### Claude Code
+
+```bash
+claude mcp add trios-mcp-rag \
+  -- sh -c 'set -a && . ./.env && exec ./target/release/trios-mcp-rag'
+claude mcp list
+# Restart your Claude Code session — MCP tools load at session start.
+```
+
+### Cursor / Windsurf / opencode
+
+In each host's MCP-server settings, add an entry that launches
+`./target/release/trios-mcp-rag` with environment loaded from `./.env`.
+Verify with the host's MCP-tools panel. Detailed per-host guides:
+[`Connection guides`](#connection-guides) section below.
+
+### Perplexity Computer
+
+1. Open [Manage skills](https://www.perplexity.ai/computer/skills).
+2. Upload [`docs/skills/trios-mcp-rag.zip`](docs/skills/trios-mcp-rag.zip)
+   and [`docs/skills/trios-research-canon.zip`](docs/skills/trios-research-canon.zip)
+   under "User skills".
+3. The descriptions include trigger phrases; Perplexity auto-loads them
+   when a relevant task arrives.
+
+For end-to-end PDF builds, drive Claude Code locally — Perplexity
+Computer uses the skills for operating posture, not as the renderer.
+
+### Generic agentskills-compatible host
+
+Unzip `docs/skills/*.zip` and point your host's skill loader at the
+resulting directory, then register `./target/release/trios-mcp-rag`
+with your MCP layer.
+
+### Build a fresh GOLDEN CHAIN PDF
+
+Once the agent is awake:
+
+```bash
+trios-mcp-rag build-pdf --dry-run
+
+trios-mcp-rag build-pdf \
+  --book-mode \
+  --out-dir generated/out \
+  --pdf-name "GOLDEN_CHAIN_$(date +%F).pdf"
+```
+
+Reference baseline build: **88 chapters → 327 pages, ~11 MB, cover
+inserted**, database read **read-only**.
+
+Then run the QA checklist
+([`docs/qa/brochure-pdf-checklist.md`](docs/qa/brochure-pdf-checklist.md)
+and [`docs/rag/PDF_QA_CHECKLIST.md`](docs/rag/PDF_QA_CHECKLIST.md))
+before sharing the artefact.
 
 ---
 

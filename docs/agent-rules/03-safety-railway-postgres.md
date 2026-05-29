@@ -69,6 +69,26 @@ Not: "Connect using the literal connection string copied from Railway."
 The Rust pipeline in this repo already follows that contract (see
 README → "Production safety"); the agent must do the same.
 
+### Reference implementation
+
+The secrets-discipline gate is enforced at commit time by
+[`.pre-commit-config.yaml`](../../.pre-commit-config.yaml) and
+[`.gitleaks.toml`](../../.gitleaks.toml). The active hooks are:
+
+  - **`gitleaks v8.21.0`** with two custom rules — `postgres-dsn`
+    matches any `postgres(ql)?://user:pass@host` form, and
+    `railway-tcp-proxy` matches Railway's TCP-proxy hostname
+    patterns. These fire before the commit object is created;
+    bypassing them requires an explicit `--no-verify`, which is
+    out-of-policy without a same-session `go ahead`.
+  - **`pre-commit-hooks v4.6.0`** baseline (whitespace, large-file,
+    merge-conflict-marker, private-key detection).
+
+A wave that adds a new secret class (e.g. a new third-party API
+key) MUST add the matching gitleaks rule in the same commit. The
+rule and the hook are the only sanctioned places where rule 03
+leaves the documentation layer and becomes executable.
+
 ## If a secret is accidentally exposed
 
 1. Stop the current operation.

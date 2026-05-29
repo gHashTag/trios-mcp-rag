@@ -164,6 +164,36 @@ maintainer should treat the TSV dump as ephemeral cache.
 If no TSV is available, the agent must read from Path A or Path C and
 re-export — never invent rows.
 
+#### Schema subset note (Path B)
+
+The local TSV mirror schema is a **strict subset** of the Railway
+`ssot_brochure.chapters` schema. The local mirror carries six
+columns:
+
+```
+slug TEXT PRIMARY KEY,
+kind TEXT NOT NULL,
+order_key INTEGER NOT NULL,
+title TEXT NOT NULL,
+body_md TEXT NOT NULL,
+illustration_url TEXT
+```
+
+Railway also carries provenance columns added across waves 30–35:
+`sha256`, `word_count`, `byte_size`, `format`, `asset_sha`,
+`updated_at`. Code that queries those columns will **fail silently
+against the local mirror** (column does not exist → `ERROR: column
+"sha256" does not exist`).
+
+Any tool, script, or migration that depends on a provenance column
+MUST declare in its docstring or top-of-file comment which access
+path it requires — "requires Path A or Path C (Railway-only
+columns)" or "works on Path A / B / C (subset-safe)". Rule 09 is
+satisfied by
+[`scripts/verify-ssot-integrity.sh`](../../scripts/verify-ssot-integrity.sh)
+which requires the full Railway schema and is therefore Path A or
+Path C only.
+
 ### Path C — Direct DSN from the maintainer's local `.env`
 
 For Claude Code / Codex running on the maintainer's Mac:

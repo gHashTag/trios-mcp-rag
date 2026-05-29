@@ -89,6 +89,30 @@ key) MUST add the matching gitleaks rule in the same commit. The
 rule and the hook are the only sanctioned places where rule 03
 leaves the documentation layer and becomes executable.
 
+### Bootstrap install (added v16)
+
+`.pre-commit-config.yaml` and `.gitleaks.toml` are configuration
+files, not installed binaries. A fresh `git clone` of this repo
+does **not** run the hooks until a human (or agent on their behalf)
+installs the `pre-commit` framework and registers the local git
+hook. v15 named the binaries in this rule without saying so;
+v16 adds the missing one-time setup:
+
+```bash
+# One-time, per clone, before the first commit:
+python3 -m pip install --user pre-commit   # or: pipx install pre-commit
+pre-commit install                          # writes .git/hooks/pre-commit
+pre-commit run --all-files                  # sanity-check on existing tree
+```
+
+Verification: `test -x .git/hooks/pre-commit` must succeed; the
+hook script's first non-shebang line should reference `pre-commit`.
+If either check fails, the gitleaks rule is **not** actually
+gating commits — fix the bootstrap before continuing the wave.
+The matching note in the skill mirror's `scripts-inventory.md` (the
+`.pre-commit-config.yaml` row) reproduces this requirement so an
+agent reading only the skill catalogue cannot miss it.
+
 ## If a secret is accidentally exposed
 
 1. Stop the current operation.

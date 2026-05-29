@@ -19,10 +19,10 @@
 % Strip trailing dot/comma from inline URLs when rendered by hyperref
 \usepackage{bookmark}
 \hypersetup{
-  pdftitle={GOLDEN CHAIN --- Trinity S\textsuperscript{3}AI Compendium},
+  pdftitle={GOLDEN CHAIN --- Trinity S\texorpdfstring{\textsuperscript{3}}{³}AI Compendium},
   pdfauthor={Dmitrii Vasilev; Stergios Pellis; Scott Olsen},
   pdfsubject={φ-structured physical constants, unification, and cognitive architecture},
-  pdfkeywords={golden ratio, fine-structure constant, unification, physics, AI, Trinity S3AI, Vasilev, Pellis, Olsen},
+  pdfkeywords={golden ratio, fine-structure constant, unification, physics, AI, Trinity S³AI, Vasilev, Pellis, Olsen, GOLDEN CHAIN, claim-status, falsifiability},
   bookmarksopen=true,
   bookmarksopenlevel=1,
   pdfstartview=FitH,
@@ -100,6 +100,30 @@
 \newunicodechar{☒}{{\fontfamily{pzd}\selectfont\char"36}}  % U+2612 ballot-box-with-X
 \usepackage{tikz}
 \usetikzlibrary{positioning,arrows.meta,shapes.geometric}
+% v8/B1: Claim-status badge macros. Five levels per docs/agent-rules/04-claim-status.md.
+% Mapped to a tcolorbox-style fcolorbox so the label stays visually compact and
+% can be inlined next to the chapter title or at a section start. Colors chosen
+% to be print-safe (no full-saturation backgrounds) and screen-distinguishable.
+\usepackage{xcolor}
+\definecolor{statusverified}{HTML}{1F7A1F}
+\definecolor{statusempirical}{HTML}{1F5FA8}
+\definecolor{statusopen}{HTML}{8A6D00}
+\definecolor{statushighrisk}{HTML}{B8000F}
+\definecolor{statusretracted}{HTML}{555555}
+\providecommand{\claimbadge}[2]{%
+  \hspace{0.25em}\textcolor{#1}{\fbox{\textsf{\scriptsize\bfseries #2}}}\hspace{0.25em}}
+\providecommand{\statusVerified}{\claimbadge{statusverified}{Verified}}
+\providecommand{\statusEmpirical}{\claimbadge{statusempirical}{Empirical fit}}
+\providecommand{\statusOpen}{\claimbadge{statusopen}{Open conjecture}}
+\providecommand{\statusHighRisk}{\claimbadge{statushighrisk}{High-risk}}
+\providecommand{\statusRetracted}{\claimbadge{statusretracted}{Retracted}}
+% Generic \status{LABEL} accepts a free string for unusual cases.
+\providecommand{\status}[1]{%
+  \claimbadge{statusopen}{#1}}
+% v8/B12: TBD badge for honest scientific disclosures (real measurement pending).
+% Distinct from a drafty placeholder — must read "this number is owed, not missing".
+\providecommand{\tbd}[1]{%
+  \hspace{0.25em}\fcolorbox{red!50}{red!5}{\textsf{\scriptsize TBD:\,#1}}\hspace{0.25em}}
 \usepackage[normalem]{ulem}  % provides \sout for strikethrough; pandoc uses \st
 \providecommand{\st}[1]{\sout{#1}}
 % [wave-23] capt-of and caption packages both caused issues:
@@ -155,13 +179,14 @@
   \@makeschapterhead{#1}%
   \@afterheading}
 % Compact, INLINE chapter heading — no forced page break, no \thispagestyle.
+% v8/B11: Suppress the auto-generated "Chapter N." prefix entirely when the
+% body H1 already carries an explicit "P\d §N." or "§N." marker. The brochure's
+% chapter titles encode their paper and section number explicitly
+% (e.g. "P1 §1. Introduction"), so the auto prefix becomes a redundant
+% "Chapter 12. P1 §1. Introduction". We simply drop the auto prefix
+% — the title itself remains TOC-bookmarked through the \@chapter path.
 \renewcommand{\@makechapterhead}[1]{%
   {\parindent 0pt \raggedright \normalfont
-   \ifnum \c@secnumdepth >\m@ne
-     \large\bfseries \@chapapp\space \thechapter
-     \par\nobreak
-     \vskip 4pt
-   \fi
    \interlinepenalty\@M
    \LARGE \bfseries #1\par\nobreak
    \vskip 12pt

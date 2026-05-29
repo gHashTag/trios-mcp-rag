@@ -75,7 +75,47 @@ local function rewrite_super_sub(s)
   return table.concat(out)
 end
 
+-- Caret-pattern rewriter (B5 v8):
+-- Pandoc parses literal `F^*`, `R^+`, `10^-3`, `Z^d` outside math as a flat
+-- ASCII `^` followed by characters. They render as a Computer-Modern caret
+-- glyph and the next chars sit on the baseline, producing illegible math.
+-- We rewrite specific tight patterns to \textsuperscript{...}:
+--   * single letter + ^ + (one * or +)            → F^*, R^+, Z^*
+--   * single letter + ^ + (one alphanum)          → Z^d, M^N (rare)
+--   * digit(s) + ^ + (optional - and 1-3 digits)  → 10^-3, 10^9
+-- Only operates on Str tokens (i.e. inline text), so display math and code
+-- spans are untouched. To stay conservative we DO NOT rewrite trailing
+-- alphanumeric runs longer than 3 chars (avoids splitting filenames or
+-- references like `commit^abc1234`).
+local function rewrite_carets(s)
+  if not s:find('%^') then return s end
+  -- Pattern A: <letter>^<*|+>  (e.g. F^*, R^+)
+  s = s:gsub('(%f[%w_])(%a)%^([%*%+])', function(boundary, lhs, op)
+    return boundary .. lhs .. '\\textsuperscript{' .. op .. '}'
+  end)
+  -- Pattern B: <digit-run>^-?<digit-run>  (e.g. 10^-3, 10^9, 10^23)
+  s = s:gsub('(%d+)%^(%-?%d+)', function(base, exp)
+    return base .. '\\textsuperscript{' .. exp .. '}'
+  end)
+  -- Pattern C: <letter>^<single letter or digit>   (e.g. Z^d, M^N)
+  -- Conservative: only one trailing alphanumeric to avoid breaking refs.
+  s = s:gsub('(%f[%w_])(%a)%^(%w)(%f[%W_])', function(b, lhs, ch, e)
+    return b .. lhs .. '\\textsuperscript{' .. ch .. '}' .. e
+  end)
+  return s
+end
+
 function Str(elem)
+  -- First handle caret patterns (B5). If rewritten, emit as RawInline since
+  -- it now contains literal LaTeX. We then still feed through the super/sub
+  -- pass below.
+  local caret_text = rewrite_carets(elem.text)
+  if caret_text ~= elem.text then
+    -- Inject as RawInline; the super/sub fallback only matters for true
+    -- Unicode super/sub codepoints in source, which won't appear inside
+    -- a string we just expanded with LaTeX commands.
+    return pandoc.RawInline('latex', caret_text)
+  end
   local rewritten = rewrite_super_sub(elem.text)
   if rewritten == elem.text then return nil end  -- no change
   -- If we introduced LaTeX, return a RawInline so pandoc preserves it.

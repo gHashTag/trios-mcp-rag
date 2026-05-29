@@ -30,8 +30,10 @@ full index — every rule was added in response to a real audit
 finding. Curated audits live in [`docs/audits/`](docs/audits/);
 recent ones include
 [`build-2026-05-29-v13.md`](docs/audits/build-2026-05-29-v13.md),
-[`build-2026-05-29-v14.md`](docs/audits/build-2026-05-29-v14.md), and
-[`build-2026-05-29-v15.md`](docs/audits/build-2026-05-29-v15.md).
+[`build-2026-05-29-v14.md`](docs/audits/build-2026-05-29-v14.md),
+[`build-2026-05-29-v15.md`](docs/audits/build-2026-05-29-v15.md),
+[`build-2026-05-29-v16.md`](docs/audits/build-2026-05-29-v16.md), and
+[`build-2026-05-29-v17.md`](docs/audits/build-2026-05-29-v17.md).
 
 - [`00-canonical-pipeline.md`](docs/agent-rules/00-canonical-pipeline.md) — Rust + pandoc + tectonic is the only supported renderer.
 - [`01-ssot-and-derived-artifacts.md`](docs/agent-rules/01-ssot-and-derived-artifacts.md) — Postgres `ssot_brochure.chapters` is authoritative; files are derived.
@@ -153,7 +155,8 @@ Reference baseline build (post-v12, 2026-05-29):
 **read-only**. Reference sha256:
 `6d2e29ed32cc92b4aea32a0c639f7f16c646d94e1aa4adba97787869ec79293d`.
 See `docs/qa/brochure-pdf-checklist.md` for the full numeric baseline
-and historical waves (v8 → v10 → v12).
+and historical waves (v8 → v10 → v12 → … → v17; v13–v17 are
+audit-only, baseline unchanged).
 
 Then run the QA checklist
 ([`docs/qa/brochure-pdf-checklist.md`](docs/qa/brochure-pdf-checklist.md)

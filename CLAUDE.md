@@ -36,7 +36,9 @@ See:
   workflow; recent waves:
   [`build-2026-05-29-v13.md`](docs/audits/build-2026-05-29-v13.md),
   [`build-2026-05-29-v14.md`](docs/audits/build-2026-05-29-v14.md),
-  [`build-2026-05-29-v15.md`](docs/audits/build-2026-05-29-v15.md).
+  [`build-2026-05-29-v15.md`](docs/audits/build-2026-05-29-v15.md),
+  [`build-2026-05-29-v16.md`](docs/audits/build-2026-05-29-v16.md),
+  [`build-2026-05-29-v17.md`](docs/audits/build-2026-05-29-v17.md).
 - [docs/literature/](docs/literature/) — 4-track research canon backing
   the refinements
 

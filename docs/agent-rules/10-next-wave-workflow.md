@@ -1,9 +1,17 @@
-# 10 — Next-Wave Workflow (v9 → v12 pattern, normative)
+# 10 — Next-Wave Workflow (v9 → v16 pattern, normative)
 
 Every "next wave" / "critic-proof pass" on the GOLDEN CHAIN PDF follows
-the same five-step pattern. The four most recent waves (v9, v10, v11,
-v12) all used it; deviations have caused drift and re-work. This rule
-captures the pattern so future agents do not re-invent it.
+the same five-step pattern. **Nine consecutive waves** have used it
+(v9, v10, v11, v12 — rebuild waves; v13, v14, v15, v16, v17 —
+audit-only waves on the post-v12 baseline `f7c36a7`,
+sha256 `6d2e29ed…`). Every deviation has caused drift or re-work.
+This rule captures the pattern so future agents do not re-invent it.
+
+Audit-only waves (v13–v17) skip steps 2–4 but still produce step 1
+(`docs/audits/<wave>.md`) and step 5 (cross-repo / skill-mirror refresh).
+This distinction was introduced in v17 P0.2 after `agent-bootstrap.md`'s
+"Latest migration / runbook" pointer was wrongly flagged as drift
+for four waves running.
 
 This rule is normative. If you are running a wave that does not fit
 this shape, stop and ask before proceeding — there is almost always a

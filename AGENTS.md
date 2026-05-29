@@ -91,6 +91,18 @@ following wave fixed and the verification gates the wave had to pass.
   Open-conjecture marker regex, hype-scan context exclusions,
   `.pre-commit-config.yaml` / `.gitleaks.toml` reference,
   local-mirror schema subset note.
+- [`docs/audits/build-2026-05-29-v16.md`](docs/audits/build-2026-05-29-v16.md)
+  — orphaned v13 audit doc reconstructed, `verify-ssot-integrity.sh`
+  Path-B preflight (exit 99), 10 broken `../../` skill-mirror links
+  rewritten to absolute URLs, README dead links to sister repo
+  `trinity-s3ai` fixed, rule 10 §"Skill mirror link rewrite" +
+  §"Link-rot pre-flight" subsections, rule 03 §"Bootstrap install".
+- [`docs/audits/build-2026-05-29-v17.md`](docs/audits/build-2026-05-29-v17.md)
+  — orphan v16 audit doc linked from entry points, `agent-bootstrap`
+  "Latest audit" pointer bumped v12→v16, stale `Last updated` footer
+  cleared, rule 10 title bumped to v9→v16 pattern, executable
+  `scripts/check-link-rot.sh` shipped (codifies rule 10 §Link-rot
+  pre-flight), `trios-research-canon` re-verified post-v16.
 - [docs/rag/trios-phd-canon.md](docs/rag/trios-phd-canon.md)
   — Canonical TRIOS PhD invariants for RAG / agent retrieval, including
   the `TRIOS_PHD_NO_IMAGE_TRAIN` rule and the accepted PDF QA baseline.

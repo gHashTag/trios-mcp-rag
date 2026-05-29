@@ -341,13 +341,25 @@ appear in chat, in commits, or in generated artefacts:
 
 ## 8. Quick Reference Links
 
-- Latest audit: [`docs/audits/build-2026-05-29-v12.md`](../audits/build-2026-05-29-v12.md)
+- Latest audit: [`docs/audits/build-2026-05-29-v17.md`](../audits/build-2026-05-29-v17.md)
+  (audit-only wave; previous: [v16](../audits/build-2026-05-29-v16.md),
+  [v15](../audits/build-2026-05-29-v15.md),
+  [v14](../audits/build-2026-05-29-v14.md),
+  [v13](../audits/build-2026-05-29-v13.md)).
 - Latest migration: [`docs/migrations/2026-05-29-v12-fixes.sql`](../migrations/2026-05-29-v12-fixes.sql)
+  (still the most recent migration on disk; v13–v17 are audit-only
+  waves with no migration or runbook artefacts).
 - Latest runbook: [`docs/migrations/2026-05-29-v12-runbook.md`](../migrations/2026-05-29-v12-runbook.md)
+  (same caveat as above).
 - Wave 22 cross-repo ledger: [`trinity-s3ai/WAVE22_STATUS.md`](https://github.com/gHashTag/trinity-s3ai/blob/main/WAVE22_STATUS.md)
 - Published PDF: [`trinity-s3ai/releases/GOLDEN_CHAIN_compendium_v12.pdf`](https://github.com/gHashTag/trinity-s3ai/blob/main/releases/GOLDEN_CHAIN_compendium_v12.pdf)
 - Operating rules: [`AGENTS.md`](../../AGENTS.md), [`CLAUDE.md`](../../CLAUDE.md), [`docs/agent-rules/`](../agent-rules/)
 
 ---
 
-*Last updated: 2026-05-29 (v12 build).*
+*Last updated: 2026-05-29 (v17 wave; baseline still post-v12 build `f7c36a7`,
+sha256 `6d2e29ed…`).* The "Latest" triad above tracks the most recent
+**wave** for the audit pointer and the most recent **artefact on disk**
+for the migration / runbook pointers. v13–v17 are audit-only waves and
+intentionally do not ship migration / runbook files — do not flag the
+pointer divergence as drift.

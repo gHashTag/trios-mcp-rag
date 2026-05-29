@@ -166,16 +166,19 @@ before sharing the artefact.
 
 This repo serves the **Trinity S³AI** compendium. The project follows a
 verification-first discipline. Before citing any claim, check the
-evidence ledger:
+evidence ledger. **Note:** the first three rows below live in the
+sister formalization repository
+[`gHashTag/trinity-s3ai`](https://github.com/gHashTag/trinity-s3ai)
+(theorem-level evidence ledger); the last three live in this repo.
 
-| Document | Purpose |
-|----------|---------|
-| [`docs/CORRECTED_GAP_ANALYSIS.md`](docs/CORRECTED_GAP_ANALYSIS.md) | Claim-by-claim mapping to repo evidence (file/theorem/PR/commit) |
-| [`docs/RETRACTED_OR_UNVERIFIED_CLAIMS.md`](docs/RETRACTED_OR_UNVERIFIED_CLAIMS.md) | Registry of withdrawn or hallucinated claims |
-| [`docs/NOBEL_LEVEL_RESEARCH_PROGRAM.md`](docs/NOBEL_LEVEL_RESEARCH_PROGRAM.md) | 5–10 year falsifiable research program (not a prize promise) |
-| [`docs/RAG_TEST_PLAN.md`](docs/RAG_TEST_PLAN.md) | Local unit, MCP smoke, RAG quality, PDF, and Railway write-gate tests |
-| [`docs/CHAIN_OF_CUSTODY_COMPETITORS.md`](docs/CHAIN_OF_CUSTODY_COMPETITORS.md) | Chain-of-custody proof competitor map for DePIN positioning |
-| [`ROADMAP.md`](ROADMAP.md) | Implementation roadmap for MCP, PDF, SSOT, and custody-proof work |
+| Document | Repo | Purpose |
+|----------|------|---------|
+| [`docs/CORRECTED_GAP_ANALYSIS.md`](https://github.com/gHashTag/trinity-s3ai/blob/main/docs/CORRECTED_GAP_ANALYSIS.md) | trinity-s3ai | Claim-by-claim mapping to repo evidence (file/theorem/PR/commit) |
+| [`docs/RETRACTED_OR_UNVERIFIED_CLAIMS.md`](https://github.com/gHashTag/trinity-s3ai/blob/main/docs/RETRACTED_OR_UNVERIFIED_CLAIMS.md) | trinity-s3ai | Registry of withdrawn or hallucinated claims |
+| [`docs/NOBEL_LEVEL_RESEARCH_PROGRAM.md`](https://github.com/gHashTag/trinity-s3ai/blob/main/docs/NOBEL_LEVEL_RESEARCH_PROGRAM.md) | trinity-s3ai | 5–10 year falsifiable research program (not a prize promise) |
+| [`docs/RAG_TEST_PLAN.md`](docs/RAG_TEST_PLAN.md) | this repo | Local unit, MCP smoke, RAG quality, PDF, and Railway write-gate tests |
+| [`docs/CHAIN_OF_CUSTODY_COMPETITORS.md`](docs/CHAIN_OF_CUSTODY_COMPETITORS.md) | this repo | Chain-of-custody proof competitor map for DePIN positioning |
+| [`ROADMAP.md`](ROADMAP.md) | this repo | Implementation roadmap for MCP, PDF, SSOT, and custody-proof work |
 
 **Current snapshot (trinity-s3ai `main`, 2026-05-24):**
 - **1,762** machine-checked theorems (`Qed`/`Defined`)

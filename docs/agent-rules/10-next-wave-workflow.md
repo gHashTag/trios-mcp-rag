@@ -147,6 +147,71 @@ date is the same; the Perplexity Computer UI then shows versions
 side-by-side. Bumping the filename to `<date>-v13.pdf` defeats this and
 forces the user into a flat list of orphan PDFs.
 
+## Skill mirror link rewrite
+
+When step 5 mirrors `docs/agent-rules/*.md`, `docs/qa/*.md`, or
+`docs/agents/agent-bootstrap.md` into the user-scope skill
+`trios-mcp-rag/references/`, **any link that uses an upstream-repo
+relative path** (`../../scripts/...`, `../../.pre-commit-config.yaml`,
+`../agent-rules/...`, `../qa/...`) MUST be rewritten to an **absolute
+GitHub URL** of the form
+
+```
+https://github.com/gHashTag/trios-mcp-rag/blob/main/<path>
+```
+
+**Why.** From inside the repo, `../../scripts/verify-ssot-integrity.sh`
+resolves to a real file. From inside the skill, the same string
+resolves to `~/workspace/skills/user/scripts/...` which does not
+exist — the skill workspace has no `scripts/` directory. v15
+introduced 10 such broken links by mirroring rule files verbatim; v16
+fixed them and added this rule.
+
+**Procedure.** After running `cp docs/agent-rules/NN-*.md
+references/NN-*.md` etc., run:
+
+```bash
+# Inside the skill references/ directory.
+# Covers every upstream subdirectory the skill mirrors from:
+#   ../../<repo-root-file>, ../agent-rules/, ../qa/, ../rag/,
+#   ../literature/, ../audits/, ../migrations/  (file form and trailing-slash directory form).
+for f in *.md; do
+  sed -i -E \
+    -e 's#\]\(\.\./\.\./([^)]+)\)#](https://github.com/gHashTag/trios-mcp-rag/blob/main/\1)#g' \
+    -e 's#\]\(\.\./agent-rules/\)#](https://github.com/gHashTag/trios-mcp-rag/tree/main/docs/agent-rules/)#g' \
+    -e 's#\]\(\.\./agent-rules/([^)]+)\)#](https://github.com/gHashTag/trios-mcp-rag/blob/main/docs/agent-rules/\1)#g' \
+    -e 's#\]\(\.\./qa/([^)]+)\)#](https://github.com/gHashTag/trios-mcp-rag/blob/main/docs/qa/\1)#g' \
+    -e 's#\]\(\.\./rag/([^)]+)\)#](https://github.com/gHashTag/trios-mcp-rag/blob/main/docs/rag/\1)#g' \
+    -e 's#\]\(\.\./literature/\)#](https://github.com/gHashTag/trios-mcp-rag/tree/main/docs/literature/)#g' \
+    -e 's#\]\(\.\./literature/([^)]+)\)#](https://github.com/gHashTag/trios-mcp-rag/blob/main/docs/literature/\1)#g' \
+    -e 's#\]\(\.\./audits/([^)]+)\)#](https://github.com/gHashTag/trios-mcp-rag/blob/main/docs/audits/\1)#g' \
+    -e 's#\]\(\.\./migrations/([^)]+)\)#](https://github.com/gHashTag/trios-mcp-rag/blob/main/docs/migrations/\1)#g' \
+    "$f"
+done
+```
+
+**Verification gate.** `grep -nE '\]\(\.\./' references/*.md` must
+return **no matches** for any file after the rewrite. If a new
+upstream subdirectory is introduced in a future wave, extend the
+rewriter and update this gate before mirroring.
+
+## Link-rot pre-flight (added v16)
+
+A wave that claims to fix link rot or add cross-references MUST
+first verify that **every link it adds resolves**. For each new
+link:
+
+  - **Repo-relative path:** `test -e "$path"` must succeed before
+    the commit.
+  - **Absolute URL:** `curl -fsSLI "$url" >/dev/null` must succeed
+    (HTTP 200) before the commit. If the wave is offline-only, mark
+    such links explicitly with `<!-- TODO(vN+1): verify URL -->`.
+
+v15 violated this by linking to `docs/audits/build-2026-05-29-v13.md`
+from README/CLAUDE/AGENTS without first checking that the file
+existed (it did not). v16 reconstructed the file and codified the
+rule.
+
 ## Cross-references
 
 - `docs/agents/agent-bootstrap.md` — cross-session entry point.

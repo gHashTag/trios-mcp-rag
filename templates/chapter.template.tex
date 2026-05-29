@@ -120,28 +120,54 @@
 \def\pandocbounded#1{#1}
 % Suppress bold-italic font-shape substitution warning
 \DeclareFontShape{TU}{latinmodern-math.otf(0)}{b}{it}{<->ssub*latinmodern-math.otf(0)/b/n}{}
-% Compact chapter heading — reclaims ~40% of vertical whitespace on chapter
-% openers so short appendix chapters don't waste half a page. Uses smaller
-% "Chapter N" line and tighter top/bottom skip than the book class default.
+%
+% [brochure-overshoot fix, 2026-05-29]
+% Stock book.cls \chapter calls \cleardoublepage / \clearpage internally,
+% so 74 \chapter commands in a 62-chapter brochure forced ~74 page breaks
+% and pushed the build to 284 pp vs the 150 pp baseline. Override \chapter
+% so it lays out the heading INLINE — no \clearpage, no \thispagestyle —
+% but still keeps the heading visually loud and TOC-bookmarked. Soft
+% keep-together via \Needspace lets short chapters share a page tail with
+% the previous chapter's trailing references list, eliminating the
+% "ghost short reference page" pattern flagged in QA §8.
+\renewcommand\chapter{%
+  \par
+  \Needspace{0.30\textheight}%
+  \vspace{1.2em}%
+  \@afterindentfalse
+  \secdef\@chapter\@schapter}
+\def\@chapter[#1]#2{%
+  \ifnum \c@secnumdepth >\m@ne
+    \refstepcounter{chapter}%
+    \typeout{\@chapapp\space\thechapter.}%
+    \addcontentsline{toc}{chapter}{\protect\numberline{\thechapter}#1}%
+  \else
+    \addcontentsline{toc}{chapter}{#1}%
+  \fi
+  \chaptermark{#1}%
+  \@makechapterhead{#2}%
+  \@afterheading}
+\def\@schapter#1{%
+  \@makeschapterhead{#1}%
+  \@afterheading}
+% Compact, INLINE chapter heading — no forced page break, no \thispagestyle.
 \renewcommand{\@makechapterhead}[1]{%
-  \vspace*{20pt}%
   {\parindent 0pt \raggedright \normalfont
    \ifnum \c@secnumdepth >\m@ne
      \large\bfseries \@chapapp\space \thechapter
      \par\nobreak
-     \vskip 6pt
+     \vskip 4pt
    \fi
    \interlinepenalty\@M
    \LARGE \bfseries #1\par\nobreak
-   \vskip 18pt
+   \vskip 12pt
   }}
 \renewcommand{\@makeschapterhead}[1]{%
-  \vspace*{20pt}%
   {\parindent 0pt \raggedright
    \normalfont
    \interlinepenalty\@M
    \LARGE \bfseries #1\par\nobreak
-   \vskip 18pt
+   \vskip 12pt
   }}
 \makeatother
 

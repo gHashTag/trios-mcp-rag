@@ -58,6 +58,37 @@ enforced via the Markdown-paragraph form. A build containing
 Open-conjecture claims without falsification paths must fail the QA
 checklist in rule 05.
 
+### 2.1 Open-conjecture marker syntax (formal)
+
+The Markdown-paragraph form accepts **exactly four** marker syntaxes,
+in priority order. A linter implementing this gate MUST treat a
+paragraph that opens with any of these as a real Open-conjecture
+claim site requiring a sibling `**Falsification path:**` paragraph:
+
+```
+\*\*Open conjecture\*\*          # Markdown bold (canonical)
+\\emph\{Open conjecture\}        # raw-LaTeX emph (legacy)
+`OPEN CONJECTURE`                 # backtick + uppercase (DePIN positioning style)
+\\statusOpen                      # LaTeX command macro (falsification ledger style)
+```
+
+A naive `ILIKE '%open conjecture%'` is **not** the gate: it would
+false-fire on the **taxonomy-definition contexts** and on the
+falsification **ledger** chapter (which catalogues but does not
+originate claims). The slug-prefix **exclusion list** for the gate is:
+
+  - `fm-01c-*` (Prologue — introduces the five-level scheme)
+  - `fm-01d-*` (Reading paths — explains label vocabulary)
+  - `fm-01e-*` (At-a-glance — defines labels for the index)
+  - `p1-10-*` (Falsification — ledger chapter; uses `\statusOpen`
+    macro to render rows of *other* chapters' Open conjectures)
+
+The operational linter (when added; see `Status:` above) MUST take
+slug-set as an env-var or CLI flag, default to the four prefixes
+above, and exit non-zero only when the marker fires **outside** the
+exclusion list AND no `**Falsification path:**` paragraph follows
+within the same chapter `body_md`.
+
 See Track 3 in [`docs/literature/03-claim-status-calibration.md`](../literature/03-claim-status-calibration.md).
 
 ## 3. Adjacent-literature anchoring

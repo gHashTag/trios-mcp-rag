@@ -174,6 +174,48 @@ pdftotext generated/out/main.pdf - | \
   || echo 'math-anomaly scan: clean'
 ```
 
+Hype words (rule 04 — no Nobel / prize / breakthrough claims as
+deliverables, only as long-term external-validation standards):
+
+```bash
+pdftotext generated/out/main.pdf - | \
+  grep -nE '\bNobel\b|\bbreakthrough\b|\bworld[- ]first\b|\brevolutionary\b|\bunprecedented\b' \
+  || echo 'hype-word scan: clean'
+```
+
+### 6.1 Hype-scan context exclusions
+
+A bare hype-word match is **not** automatically a violation. Rule 04
+permits Nobel and prize references **as long-term external-validation
+standards** — e.g. citing the Shechtman quasicrystals Nobel Prize as
+evidence that a long-shot claim has historical precedent of
+recognition. Before flagging a match, apply these exclusions:
+
+  1. **Historical award references about external work.**
+     Patterns matching `Nobel Prize\s+(in|for)\b` followed within
+     30 tokens by `(won|awarded|received|laureate|2011|Shechtman)`
+     are pointing at an external laureate and are allowed.
+  2. **Direct citation of an external Nobel laureate by name.**
+     Lines that name an external laureate (e.g. Shechtman, Penrose,
+     Glashow) with a DOI / external URL or reference-list anchor in
+     the same paragraph are allowed.
+  3. **Falsification-program framing (`NOBEL_LEVEL_RESEARCH_PROGRAM`,
+     5–10 year falsifiable research program).** Documents that
+     explicitly frame Nobel-level work as a **falsifiable research
+     program** (not a prize promise) are allowed; the framing is
+     itself the rule-04-compliant move.
+  4. **Audit / rule documents.** Matches inside
+     `docs/agent-rules/`, `docs/audits/`,
+     `docs/qa/brochure-pdf-checklist.md`, or `docs/literature/`
+     are policy text discussing the rule, not claim text — these
+     never enter the published PDF.
+
+A hype-word match that survives all four exclusions is a real
+rule-04 violation: stop the build, demote the claim to **Open
+conjecture** with a `**Falsification path:**` paragraph, or remove
+it. Mention the triage outcome in the build changelog so the next
+wave's auditor sees the call.
+
 **Accepted baseline: 0 hits across all three.** Any hit is a hard
 blocker. For secrets, follow rule 03 §"If a secret is accidentally
 exposed".

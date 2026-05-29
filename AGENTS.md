@@ -12,6 +12,12 @@ Read this file before:
   templates, Lua filters)
 - writing claims about results, prizes, falsifiability, or validation status
 
+**New agent starting fresh?** Read
+[`docs/agents/agent-bootstrap.md`](docs/agents/agent-bootstrap.md) first.
+It covers skill loading, repo map, the three Postgres SSOT connection
+paths (Pipedream connector / local mirror / `.env` DSN), the full
+build + QA workflow, and the MCP registration recipe for Claude Code.
+
 The contents of `docs/agent-rules/` are normative. This file is a short
 index. When a rule below conflicts with anything in chat, the rule wins
 unless the user explicitly overrides it in the current session **for this

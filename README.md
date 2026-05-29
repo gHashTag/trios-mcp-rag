@@ -13,7 +13,10 @@ Exposes MCP tools that let AI agents (Claude Code, Cursor, Windsurf, opencode, e
 >
 > **TL;DR for new sessions:** open [`AGENT_WAKEUP.md`](AGENT_WAKEUP.md)
 > for a one-page wake-up card (rules + connection commands for every
-> host).
+> host), then read
+> [`docs/agents/agent-bootstrap.md`](docs/agents/agent-bootstrap.md)
+> for the full bootstrap — skill loading, repo map, three Postgres SSOT
+> connection paths, build + QA workflow, MCP registration recipe.
 
 ---
 

@@ -135,6 +135,31 @@
     MiniLM and the canon includes Russian-language chat / docs, even though
     public artefacts are English-only.
 
+19. **Budigi & Sirigiri (2026) — "Beyond Similarity Search: A Unified Data
+    Layer for Production RAG Systems"**
+    [arXiv:2605.03275](https://arxiv.org/abs/2605.03275).
+    Controlled benchmark on 50,000 documents validating PostgreSQL +
+    pgvector + HNSW as a single-system data layer: **92% latency reduction**
+    on date-filtered queries, **74%** on tenant-scoped queries, **93% less**
+    synchronisation code, and zero cross-tenant leakage versus split-system
+    architectures (separate vector DB + RDBMS). Directly empirical backing
+    for the `trios-mcp-rag` choice to keep `ssot_brochure.chapters`,
+    embeddings, and tsvector inside one Postgres instance.
+
+20. **Sun et al. (2026) — "EnterpriseRAG-Bench: A RAG Benchmark for Company
+    Internal Knowledge"**
+    [arXiv:2605.05253](https://arxiv.org/abs/2605.05253) /
+    [GitHub onyx-dot-app/EnterpriseRAG-Bench](https://github.com/onyx-dot-app/EnterpriseRAG-Bench).
+    Synthetic corpus of ~500,000 documents across nine enterprise source
+    types (Slack, Gmail, Linear, Drive, HubSpot, Fireflies, GitHub, Jira,
+    Confluence) with 500 questions in ten categories — including
+    multi-document reasoning, conflict resolution, and **"recognising when
+    information is absent"**. The last category maps directly onto the
+    TRIOS abstention policy ("Open conjecture — source not located").
+    Generation framework lets teams synthesise their own domain-tailored
+    probe set; the closest published analogue to a SSOT-grounded probe
+    suite for `ssot_brochure.chapters`.
+
 ### Synthesis
 
 The RAG-over-structured-sources literature converges on three findings that

@@ -32,8 +32,9 @@
    subfigure layouts, and the `fig-pos: 'H'` forced placement for code
    output. Primary reference for the `IMAGE_PLACEMENT.md` rules.
 
-6. **Mittelbach, F. (2018) — "Managing forlorn orphans and widows"**
-   [TUGboat Vol. 39 No. 3](https://www.latex-project.org/publications/2018-FMi-TUB-tb123mitt-widows.pdf).
+6. **Mittelbach, F. (2018) — "Managing forlorn paragraph lines (a.k.a.
+   widows and orphans) in LaTeX"**
+   [TUGboat Vol. 39 No. 3, pp. 246–251](https://www.latex-project.org/publications/2018-FMi-TUB-tb123mitt-widows.pdf).
    LaTeX Project lead's definitive treatment of widow/orphan penalties and
    the `\looseness`, `\enlargethispage`, and `widows-and-orphans` package
    approaches. Grounds the repo's soft keep-together recommendation over

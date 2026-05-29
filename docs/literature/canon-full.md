@@ -282,6 +282,31 @@ because no validated publication yet exists to support them.
     MiniLM and the canon includes Russian-language chat / docs, even though
     public artefacts are English-only.
 
+19. **Budigi & Sirigiri (2026) — "Beyond Similarity Search: A Unified Data
+    Layer for Production RAG Systems"**
+    [arXiv:2605.03275](https://arxiv.org/abs/2605.03275).
+    Controlled benchmark on 50,000 documents validating PostgreSQL +
+    pgvector + HNSW as a single-system data layer: **92% latency reduction**
+    on date-filtered queries, **74%** on tenant-scoped queries, **93% less**
+    synchronisation code, and zero cross-tenant leakage versus split-system
+    architectures (separate vector DB + RDBMS). Directly empirical backing
+    for the `trios-mcp-rag` choice to keep `ssot_brochure.chapters`,
+    embeddings, and tsvector inside one Postgres instance.
+
+20. **Sun et al. (2026) — "EnterpriseRAG-Bench: A RAG Benchmark for Company
+    Internal Knowledge"**
+    [arXiv:2605.05253](https://arxiv.org/abs/2605.05253) /
+    [GitHub onyx-dot-app/EnterpriseRAG-Bench](https://github.com/onyx-dot-app/EnterpriseRAG-Bench).
+    Synthetic corpus of ~500,000 documents across nine enterprise source
+    types (Slack, Gmail, Linear, Drive, HubSpot, Fireflies, GitHub, Jira,
+    Confluence) with 500 questions in ten categories — including
+    multi-document reasoning, conflict resolution, and **"recognising when
+    information is absent"**. The last category maps directly onto the
+    TRIOS abstention policy ("Open conjecture — source not located").
+    Generation framework lets teams synthesise their own domain-tailored
+    probe set; the closest published analogue to a SSOT-grounded probe
+    suite for `ssot_brochure.chapters`.
+
 ### Synthesis
 
 The RAG-over-structured-sources literature converges on three findings that
@@ -514,6 +539,22 @@ robustness dimension that the existing canary probes do not cover.
     declared certainty alone — the **SSOT lookup + external-DOI check**
     must remain mandatory, even when the model sounds confident.
 
+15. **Atasoy, Mutlu, Sezer, Wahdan (2026) — "Do Benchmarks Underestimate
+    LLM Performance? Evaluating Hallucination Detection With LLM-First
+    Human-Adjudicated Assessment"** (ROMCIR Workshop at ECIR 2026)
+    [arXiv:2605.08462](https://arxiv.org/abs/2605.08462).
+    Re-evaluates QAGS-C and SummEval contextual-hallucination benchmarks
+    by adjudicating conflicts between original human labels and
+    Gemini 2.5 Flash / GPT-5 Mini judgments. After two cross-cultural
+    adjudicators reviewed conflicts, **triple agreement rose by 6.38%**
+    (QAGS-C) and **7.62%** (SummEval); model accuracy also improved
+    materially (GPT +4.25%/+2.34%, Gemini +8.51%/+3.80%). Adjudicators
+    frequently sided with the *models* when the LLM provided explicit
+    reasoning. Strong evidence for the TRIOS QA design: a **single-pass
+    human label is not a ground-truth signal**; the right pattern is
+    LLM judgment + human adjudication of conflicts. Reinforces the
+    FACTS Grounding multi-judge protocol already in this canon.
+
 ### Synthesis
 
 The hallucination and calibration literature establishes three things that
@@ -653,8 +694,9 @@ automatically downgraded to **High-risk**.
    subfigure layouts, and the `fig-pos: 'H'` forced placement for code
    output. Primary reference for the `IMAGE_PLACEMENT.md` rules.
 
-6. **Mittelbach, F. (2018) — "Managing forlorn orphans and widows"**
-   [TUGboat Vol. 39 No. 3](https://www.latex-project.org/publications/2018-FMi-TUB-tb123mitt-widows.pdf).
+6. **Mittelbach, F. (2018) — "Managing forlorn paragraph lines (a.k.a.
+   widows and orphans) in LaTeX"**
+   [TUGboat Vol. 39 No. 3, pp. 246–251](https://www.latex-project.org/publications/2018-FMi-TUB-tb123mitt-widows.pdf).
    LaTeX Project lead's definitive treatment of widow/orphan penalties and
    the `\looseness`, `\enlargethispage`, and `widows-and-orphans` package
    approaches. Grounds the repo's soft keep-together recommendation over

@@ -122,6 +122,22 @@
     declared certainty alone — the **SSOT lookup + external-DOI check**
     must remain mandatory, even when the model sounds confident.
 
+15. **Atasoy, Mutlu, Sezer, Wahdan (2026) — "Do Benchmarks Underestimate
+    LLM Performance? Evaluating Hallucination Detection With LLM-First
+    Human-Adjudicated Assessment"** (ROMCIR Workshop at ECIR 2026)
+    [arXiv:2605.08462](https://arxiv.org/abs/2605.08462).
+    Re-evaluates QAGS-C and SummEval contextual-hallucination benchmarks
+    by adjudicating conflicts between original human labels and
+    Gemini 2.5 Flash / GPT-5 Mini judgments. After two cross-cultural
+    adjudicators reviewed conflicts, **triple agreement rose by 6.38%**
+    (QAGS-C) and **7.62%** (SummEval); model accuracy also improved
+    materially (GPT +4.25%/+2.34%, Gemini +8.51%/+3.80%). Adjudicators
+    frequently sided with the *models* when the LLM provided explicit
+    reasoning. Strong evidence for the TRIOS QA design: a **single-pass
+    human label is not a ground-truth signal**; the right pattern is
+    LLM judgment + human adjudication of conflicts. Reinforces the
+    FACTS Grounding multi-judge protocol already in this canon.
+
 ### Synthesis
 
 The hallucination and calibration literature establishes three things that

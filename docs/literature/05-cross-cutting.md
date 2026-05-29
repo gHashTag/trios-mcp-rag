@@ -84,11 +84,15 @@ adopted by v11 / v12 of the rule set:
   **applied** (rule 02 / IMAGE_PLACEMENT use `\widowpenalty`,
   `\clubpenalty`, `\needspace`; hard `\clearpage` per-section is
   prohibited) — (`IMAGE_PLACEMENT.md`, `02-pdf-style.md`): Track 4 (Mittelbach 2018, TeX FAQ) provides the
-  formal grounding. The implementation rule is: set `\widowpenalty=9999`,
-  `\clubpenalty=9999`, use `\needspace{}` guards on chapter openers, and
+  formal grounding. The implementation rule is: set `\widowpenalty=10000`,
+  `\clubpenalty=10000` (LaTeX's `\@M` infinity sentinel — forbid the
+  break entirely; the v14 audit upgraded this from 9999 to match the
+  actual template, which is stricter than the original literature
+  recommendation), use `\needspace{}` guards on chapter openers, and
   use `fig-pos: 'ht'` rather than `[H]`. Hard `\clearpage` before every
   section is explicitly prohibited because it produces short pages and
-  excessive whitespace in book-mode output.
+  excessive whitespace in book-mode output. A single `\clearpage` after
+  the table of contents is permitted.
 
 - **Language scan covers claim-status labels** — **partially applied**
   (rule 06 enforces English-only public artefacts; strong-assertion

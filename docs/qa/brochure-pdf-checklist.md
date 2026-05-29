@@ -23,6 +23,25 @@ pdfinfo generated/out/main.pdf | head
 
 Pass: `qpdf --check` exits 0; `pdfinfo` reports a sensible page count.
 
+### 1a. Reproducibility metadata gate (active since v12)
+
+The PDF MUST NOT carry a `CreationDate` line (or any other timestamp
+field) in its metadata. `SOURCE_DATE_EPOCH` plus tectonic's reproducible
+mode neutralises the non-determinism source called out in Track 4 of
+the literature canon; if `CreationDate` reappears, the sha256 baseline
+`6d2e29ed…` cannot be reproduced.
+
+```bash
+if pdfinfo generated/out/main.pdf | grep -q '^CreationDate'; then
+  echo "FAIL: CreationDate present — reproducibility regression" >&2
+  exit 1
+fi
+```
+
+Pass: the command above prints nothing and exits 0. (Rule 07 §8 —
+`CreationDate` neutralisation is the **active** part of that
+refinement; the tectonic version pin is still `planned`.)
+
 ## 2. Page count
 
 ```bash
@@ -233,8 +252,10 @@ regression detector.** Page count tracks SSOT row count and average
 chapter length, which drift wave to wave; the short-page signal is
 template-driven and binary.
 
-| Wave | Date       | Chapters | Pages | File size | sha256 (first 8) |
-|------|------------|----------|-------|-----------|------------------|
-| v8   | 2026-05    | 30+      | ~150  | n/a       | n/a              |
-| v10  | 2026-05    | 62       | ~242  | n/a       | n/a              |
-| v12  | 2026-05-29 | **69**   | **259** | **3.5 MB** | `6d2e29ed`       |
+| Wave | Date       | Chapters | Pages | File size | sha256 (first 8) | Notes              |
+|------|------------|----------|-------|-----------|------------------|--------------------|
+| v8   | 2026-05    | 30+      | ~150  | n/a       | n/a              | rebuild            |
+| v10  | 2026-05    | 62       | ~242  | n/a       | n/a              | rebuild            |
+| v12  | 2026-05-29 | **69**   | **259** | **3.5 MB** | `6d2e29ed`     | rebuild            |
+| v13  | 2026-05-29 | 69       | 259   | 3.5 MB    | `6d2e29ed`       | audit-only, no rebuild |
+| v14  | 2026-05-29 | 69       | 259   | 3.5 MB    | `6d2e29ed`       | audit-only, no rebuild |

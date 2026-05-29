@@ -53,8 +53,11 @@ gHashTag/trinity-s3ai             Public showcase + cross-repo ledger
 ```
 
 All three are public on github.com under `gHashTag/*`. The
-`trios-mcp-rag` working branch is `docs/agent-wake-up`; head as of
-**2026-05-29 v12** is [`7bec06f`](https://github.com/gHashTag/trios-mcp-rag/commit/7bec06f).
+`trios-mcp-rag` working branch is `docs/agent-wake-up`. PDF baseline
+is the **post-v12 build** `7bec06f` (sha256 `6d2e29ed…`); v13 and v14
+were docs-only audit waves that did not change the PDF artefact —
+see `docs/audits/build-2026-05-29-v13.md` and
+`docs/audits/build-2026-05-29-v14.md`.
 
 ### Clone (read-only)
 
@@ -179,6 +182,22 @@ The `.env` file stays on the Mac. The Rust binary reads
 `RAILWAY_SSOT_URL` (preferred) or `DATABASE_URL`. Never echo, log, or
 commit either variable's value. Any audit, runbook, or migration that
 references the DSN must do so by **env-var name only**.
+
+### Known non-paths (do not try)
+
+Two paths look plausible but do not work — see the **Known non-paths**
+section of [`docs/agent-rules/03-safety-railway-postgres.md`](../agent-rules/03-safety-railway-postgres.md)
+for the full reasoning:
+
+- The Perplexity Computer **custom-credentials HTTPS proxy** cannot
+  route `libpq` wire-protocol traffic; saving a Postgres DSN as a
+  custom credential does not give you a working SSOT connection.
+- No **browser-side** tool (browser_task, fetch_url, vertical search)
+  speaks `libpq`. Browsing the Railway dashboard is **not** an SSOT
+  read path — it returns rendered HTML, not row data.
+
+Use Path A / B / C above. If none works, stop and ask the maintainer
+rather than improvising a fourth path.
 
 ## 4. Build & QA Workflow
 

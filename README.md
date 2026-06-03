@@ -511,5 +511,6 @@ MIT OR Apache-2.0
 
 - Main repo: [github.com/gHashTag/trios](https://github.com/gHashTag/trios)
 - Trinity S³AI (formalization): [github.com/gHashTag/trinity-s3ai](https://github.com/gHashTag/trinity-s3ai)
-- DOI: [10.5281/zenodo.19227877](https://doi.org/10.5281/zenodo.19227877)
+- Companion silicon (TTSKY26b): [github.com/gHashTag/tt-trinity-corona](https://github.com/gHashTag/tt-trinity-corona)
+- DOI (hardware archive only): [10.5281/zenodo.19227877](https://doi.org/10.5281/zenodo.19227877)
 - MCP specification: [modelcontextprotocol.io](https://modelcontextprotocol.io)

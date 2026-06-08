@@ -44,6 +44,14 @@ pub struct BuildConfig {
     /// `ssot_brochure.chapters` (this repo's convention); `ssot.chapters`
     /// is the broader trios convention and is also accepted.
     pub chapters_table: String,
+    /// Document slug to fetch (multi-doc SSOT, since 2026-06-08).
+    /// `None` means: fetch all rows in legacy mode (pre-migration
+    /// schema where the `doc` column does not exist). When set, the
+    /// SQL query adds `WHERE doc = $1` and orders within the doc.
+    /// Canonical values:
+    ///   - `golden-chain-compendium` (the 69-chapter brochure, default)
+    ///   - `paper3-methodology`     (the 84-format catalog paper)
+    pub doc: Option<String>,
     /// Output directory for the final PDF.
     pub out_dir: PathBuf,
     /// Working directory for intermediate artefacts (markdown, tex).
@@ -72,6 +80,7 @@ impl Default for BuildConfig {
         Self {
             database_url_env: "DATABASE_URL".into(),
             chapters_table: "ssot_brochure.chapters".into(),
+            doc: Some("golden-chain-compendium".into()),
             out_dir: repo_root.join("generated").join("out"),
             build_dir: repo_root.join("generated").join("build"),
             template: None,
@@ -92,6 +101,7 @@ pub struct BuildReport {
     pub database_url_env: String,
     pub database_url_present: bool,
     pub chapters_table: String,
+    pub doc: Option<String>,
     pub chapter_count: Option<usize>,
     pub pandoc_available: bool,
     pub tectonic_available: bool,
@@ -579,6 +589,7 @@ pub fn load_from_postgres(cfg: &BuildConfig) -> Result<Vec<Chapter>> {
     let dsn = resolve_dsn(cfg)?;
     let table = cfg.chapters_table.clone();
     let limit = cfg.limit;
+    let doc_filter: Option<String> = cfg.doc.clone();
     let rt = tokio::runtime::Builder::new_multi_thread()
         .worker_threads(1)
         .enable_all()
@@ -590,17 +601,53 @@ pub fn load_from_postgres(cfg: &BuildConfig) -> Result<Vec<Chapter>> {
         tokio::spawn(async move {
             let _ = conn.await;
         });
-        let mut sql = format!(
-            "SELECT slug, kind, order_key, title, body_md, illustration_url \
-             FROM {} ORDER BY order_key",
-            table
-        );
-        if let Some(n) = limit {
-            sql.push_str(&format!(" LIMIT {}", n as i64));
-        }
+        // Multi-doc SSOT (since 2026-06-08): if cfg.doc is set AND the
+        // `doc` column exists, filter by it. If the column does NOT
+        // exist (pre-migration database), fall back to the legacy
+        // unfiltered query so old deployments keep building.
+        let doc_col_exists: bool = {
+            let probe = client
+                .query_one(
+                    "SELECT EXISTS (
+                       SELECT 1 FROM information_schema.columns
+                       WHERE table_schema = split_part($1, '.', 1)
+                         AND table_name   = split_part($1, '.', 2)
+                         AND column_name  = 'doc'
+                     ) AS has_doc",
+                    &[&table],
+                )
+                .await
+                .ok();
+            probe.map(|r| r.get::<_, bool>("has_doc")).unwrap_or(false)
+        };
+
+        let (sql, params): (String, Vec<&(dyn tokio_postgres::types::ToSql + Sync)>) =
+            if doc_col_exists && doc_filter.is_some() {
+                let mut s = format!(
+                    "SELECT slug, kind, order_key, title, body_md, illustration_url \
+                     FROM {} WHERE doc = $1 ORDER BY order_key",
+                    table
+                );
+                if let Some(n) = limit {
+                    s.push_str(&format!(" LIMIT {}", n as i64));
+                }
+                let p: Vec<&(dyn tokio_postgres::types::ToSql + Sync)> =
+                    vec![doc_filter.as_ref().unwrap()];
+                (s, p)
+            } else {
+                let mut s = format!(
+                    "SELECT slug, kind, order_key, title, body_md, illustration_url \
+                     FROM {} ORDER BY order_key",
+                    table
+                );
+                if let Some(n) = limit {
+                    s.push_str(&format!(" LIMIT {}", n as i64));
+                }
+                (s, Vec::new())
+            };
         let rows = tokio::time::timeout(
         std::time::Duration::from_secs(30),
-        client.query(&sql, &[]),
+        client.query(&sql, &params),
     )
     .await
     .context("query chapters timed out (30s)")?
@@ -706,6 +753,7 @@ pub fn count_chapters(cfg: &BuildConfig) -> Result<usize> {
     validate_table_ident(&cfg.chapters_table)?;
     let dsn = resolve_dsn(cfg)?;
     let table = cfg.chapters_table.clone();
+    let doc_filter: Option<String> = cfg.doc.clone();
     let rt = tokio::runtime::Builder::new_multi_thread()
         .worker_threads(1)
         .enable_all()
@@ -717,9 +765,33 @@ pub fn count_chapters(cfg: &BuildConfig) -> Result<usize> {
         tokio::spawn(async move {
             let _ = conn.await;
         });
-        let sql = format!("SELECT count(*) AS n FROM {}", table);
+        // Probe for `doc` column (multi-doc SSOT). Pre-migration DBs
+        // fall back to unfiltered count, identical to legacy behaviour.
+        let doc_col_exists: bool = client
+            .query_one(
+                "SELECT EXISTS (
+                   SELECT 1 FROM information_schema.columns
+                   WHERE table_schema = split_part($1, '.', 1)
+                     AND table_name   = split_part($1, '.', 2)
+                     AND column_name  = 'doc'
+                 ) AS has_doc",
+                &[&table],
+            )
+            .await
+            .ok()
+            .map(|r| r.get::<_, bool>("has_doc"))
+            .unwrap_or(false);
+        let (sql, params): (String, Vec<&(dyn tokio_postgres::types::ToSql + Sync)>) =
+            if doc_col_exists && doc_filter.is_some() {
+                (
+                    format!("SELECT count(*) AS n FROM {} WHERE doc = $1", table),
+                    vec![doc_filter.as_ref().unwrap()],
+                )
+            } else {
+                (format!("SELECT count(*) AS n FROM {}", table), Vec::new())
+            };
         let row = client
-            .query_one(&sql, &[])
+            .query_one(&sql, &params)
             .await
             .context("count chapters")?;
         let n: i64 = row.get::<_, i64>("n");
@@ -783,6 +855,7 @@ pub fn check(cfg: &BuildConfig) -> Result<BuildReport> {
         database_url_env: cfg.database_url_env.clone(),
         database_url_present,
         chapters_table: cfg.chapters_table.clone(),
+        doc: cfg.doc.clone(),
         chapter_count,
         pandoc_available,
         tectonic_available,
@@ -1045,6 +1118,7 @@ pub fn build(cfg: &BuildConfig, loader: &ChapterLoader) -> Result<BuildReport> {
         database_url_env: cfg.database_url_env.clone(),
         database_url_present: true,
         chapters_table: cfg.chapters_table.clone(),
+        doc: cfg.doc.clone(),
         chapter_count: Some(chapters.len()),
         pandoc_available,
         tectonic_available,
@@ -1337,6 +1411,33 @@ mod tests {
         assert_eq!(cfg.limit, Some(5));
         assert_eq!(cfg.pdf_name, "phd.pdf");
         assert!(cfg.book_mode);
+    }
+
+    #[test]
+    fn build_config_default_has_golden_chain_doc() {
+        // Default BuildConfig must point at the compendium so legacy
+        // callers (no `doc` arg) keep building the brochure.
+        let cfg = BuildConfig::default();
+        assert_eq!(
+            cfg.doc.as_deref(),
+            Some("golden-chain-compendium"),
+            "default doc must be the compendium for backwards compat"
+        );
+    }
+
+    #[test]
+    fn build_config_doc_can_be_disabled() {
+        // Explicit None disables the WHERE filter (legacy / pre-migration).
+        let mut cfg = BuildConfig::default();
+        cfg.doc = None;
+        assert!(cfg.doc.is_none());
+    }
+
+    #[test]
+    fn build_config_doc_paper3_round_trip() {
+        let mut cfg = BuildConfig::default();
+        cfg.doc = Some("paper3-methodology".into());
+        assert_eq!(cfg.doc.as_deref(), Some("paper3-methodology"));
     }
 
     #[test]

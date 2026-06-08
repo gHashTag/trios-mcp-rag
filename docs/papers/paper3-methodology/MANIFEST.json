@@ -1,0 +1,92 @@
+[
+  {
+    "slug": "paper3-01-introduction",
+    "title": "Introduction",
+    "kind": "chapter",
+    "order_key": 10,
+    "badge": "Verified",
+    "word_count": 371,
+    "sha256": "121b2d6639cf457ed75e1303aa6ddf1d39d0cac2cdd9a21db66908c662319903",
+    "path": "/home/user/workspace/sprint_2026-06-08/multi_doc/chapters/paper3-01-introduction.md"
+  },
+  {
+    "slug": "paper3-02-background",
+    "title": "Background and Prior Work",
+    "kind": "chapter",
+    "order_key": 20,
+    "badge": "Verified",
+    "word_count": 334,
+    "sha256": "be2896f5bf953ecf5e78a8d4d758b96de90ef940b392832a5f18ae1549032333",
+    "path": "/home/user/workspace/sprint_2026-06-08/multi_doc/chapters/paper3-02-background.md"
+  },
+  {
+    "slug": "paper3-03-catalog-design",
+    "title": "Catalog Design",
+    "kind": "chapter",
+    "order_key": 30,
+    "badge": "Verified",
+    "word_count": 701,
+    "sha256": "39b4a3567b5115a63b19f12ab1dcfc78ab4c83192ce759629e844b6faff6e63e",
+    "path": "/home/user/workspace/sprint_2026-06-08/multi_doc/chapters/paper3-03-catalog-design.md"
+  },
+  {
+    "slug": "paper3-04-conformance-methodology",
+    "title": "Conformance Pack Methodology",
+    "kind": "chapter",
+    "order_key": 40,
+    "badge": "Verified",
+    "word_count": 456,
+    "sha256": "402f8bb84bd13fbd076a427c9003cd5832877a7dd64234f7b48752af722f0396",
+    "path": "/home/user/workspace/sprint_2026-06-08/multi_doc/chapters/paper3-04-conformance-methodology.md"
+  },
+  {
+    "slug": "paper3-05-six-packs",
+    "title": "The Six Conformance Packs",
+    "kind": "chapter",
+    "order_key": 50,
+    "badge": "Empirical fit",
+    "word_count": 893,
+    "sha256": "fb391b6446a184bc55adf1993eb1f8b07c3bb676968685fdf2d88417a3d9e8ae",
+    "path": "/home/user/workspace/sprint_2026-06-08/multi_doc/chapters/paper3-05-six-packs.md"
+  },
+  {
+    "slug": "paper3-06-p3109-crosswalk",
+    "title": "IEEE P3109 Cross-Walk",
+    "kind": "chapter",
+    "order_key": 60,
+    "badge": "Open conjecture",
+    "word_count": 410,
+    "sha256": "35e544eab4b35851231cea2e424215f720287f04664246dba1cba75e46b14353",
+    "path": "/home/user/workspace/sprint_2026-06-08/multi_doc/chapters/paper3-06-p3109-crosswalk.md"
+  },
+  {
+    "slug": "paper3-07-discussion-interpretation-gap",
+    "title": "Discussion: The Interpretation Gap as Ruler Value",
+    "kind": "chapter",
+    "order_key": 70,
+    "badge": "Empirical fit",
+    "word_count": 289,
+    "sha256": "2743b615795ae474e24c422c125b522bec4e1ecdb854bd162193f2ea00722e60",
+    "path": "/home/user/workspace/sprint_2026-06-08/multi_doc/chapters/paper3-07-discussion-interpretation-gap.md"
+  },
+  {
+    "slug": "paper3-08-reproducibility-provenance",
+    "title": "Reproducibility and Provenance",
+    "kind": "chapter",
+    "order_key": 80,
+    "badge": "Verified",
+    "word_count": 347,
+    "sha256": "07a10e84b60d761f4df69e19b8363e1921c3ffe816364c6b64f3bc201d378a4f",
+    "path": "/home/user/workspace/sprint_2026-06-08/multi_doc/chapters/paper3-08-reproducibility-provenance.md"
+  },
+  {
+    "slug": "paper3-09-future-work",
+    "title": "Future Work",
+    "kind": "chapter",
+    "order_key": 90,
+    "badge": "Open conjecture",
+    "word_count": 255,
+    "sha256": "6d1cceb612602723872319affc861248f2127b5af69ce903c43da005b50479cf",
+    "path": "/home/user/workspace/sprint_2026-06-08/multi_doc/chapters/paper3-09-future-work.md"
+  }
+]

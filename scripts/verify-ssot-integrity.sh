@@ -11,7 +11,8 @@
 # Exit codes:
 #   0 — all invariants pass
 #   N — number of failed invariants
-#   99 — environment misconfigured (no DSN)
+#   99 — environment misconfigured: no DSN OR schema-subset mode
+#        (Path B / local TSV mirror without provenance columns)
 #
 # Skills bundled (wave-by-wave provenance):
 #   wave 30 — chapters.sha256 = digest(body_md)
@@ -28,6 +29,29 @@ set -u
 DB="${DATABASE_URL:-${TRIOS_DATABASE_URL:-}}"
 if [ -z "$DB" ]; then
   echo "ERROR: DATABASE_URL or TRIOS_DATABASE_URL must be set." >&2
+  exit 99
+fi
+
+# Preflight: detect Path B (local schema-subset mirror). Rule 09's nine
+# invariants reference provenance columns (sha256, word_count, byte_size,
+# format, asset_sha, updated_at) that only exist on Railway. Running
+# against a local Path B mirror produces six confusing
+# `column "X" does not exist` errors; this preflight surfaces the cause
+# clearly and exits with the same 99 code as a missing DSN.
+HAS_SHA256=$(psql "$DB" -At -c "SELECT count(*) FROM information_schema.columns WHERE table_schema='ssot_brochure' AND table_name='chapters' AND column_name='sha256';" 2>/dev/null || echo "X")
+if [ "$HAS_SHA256" != "1" ]; then
+  echo "" >&2
+  echo "ERROR: schema-subset mode detected (Path B — local mirror)." >&2
+  echo "" >&2
+  echo "  Rule 09 invariants reference provenance columns that only" >&2
+  echo "  exist on Railway (sha256, word_count, byte_size, format," >&2
+  echo "  asset_sha, updated_at). The local TSV mirror is a strict" >&2
+  echo "  six-column subset — see docs/agents/agent-bootstrap.md" >&2
+  echo "  §'Schema subset note (Path B)'." >&2
+  echo "" >&2
+  echo "  Re-run this script against Path A (Pipedream connector) or" >&2
+  echo "  Path C (Railway DSN via .env). Path B is not supported." >&2
+  echo "" >&2
   exit 99
 fi
 

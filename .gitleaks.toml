@@ -1,0 +1,48 @@
+# gitleaks config — block secrets from entering trios-mcp-rag commits.
+# Rule 4 of AGENTS.md forbids committing DSNs / Railway tokens. This file
+# operationalises that rule via pre-commit / CI.
+#
+# Run locally:
+#   gitleaks detect --config=.gitleaks.toml --staged
+# Or as a pre-commit hook (see .pre-commit-config.yaml).
+
+title = "trios-mcp-rag secret scanner"
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "postgres-dsn"
+description = "Postgres connection string with embedded password"
+regex = '''postgresql://[^:\s]+:[^@\s]+@[^/\s]+/[^\s"']+'''
+tags = ["dsn", "secret"]
+
+[[rules]]
+id = "railway-tcp-proxy-dsn"
+description = "Railway TCP proxy DSN"
+regex = '''postgresql://[^@\s]+@[A-Za-z0-9.-]+\.proxy\.rlwy\.net:\d+/\S+'''
+tags = ["railway", "dsn", "secret"]
+
+[[rules]]
+id = "railway-api-token"
+description = "Railway API token (UUIDv4 shape)"
+# UUIDv4 with the version nibble (4) and variant nibble (8/9/a/b)
+regex = '''\b[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\b'''
+tags = ["railway", "token", "secret"]
+
+[allowlist]
+description = "Allow examples and templates that document env-var names only"
+paths = [
+  '''\.env\.example$''',
+  '''docs/agent-rules/.*\.md$''',
+  '''AGENTS\.md$''',
+  '''CLAUDE\.md$''',
+  '''AGENT_WAKEUP\.md$''',
+  '''README\.md$''',
+  '''\.gitleaks\.toml$''',
+]
+# Allow harmless example DSNs that use placeholder USER/PASSWORD literals.
+regexes = [
+  '''postgresql://USER:PASSWORD@HOST:PORT/DBNAME''',
+  '''postgresql://[a-zA-Z_]+:[a-zA-Z_]+@HOST''',
+]

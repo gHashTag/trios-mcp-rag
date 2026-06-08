@@ -9,7 +9,159 @@ Exposes MCP tools that let AI agents (Claude Code, Cursor, Windsurf, opencode, e
 > Railway Postgres SSOT. The full rule set lives in
 > [`docs/agent-rules/`](docs/agent-rules/) and covers the canonical
 > pipeline, SSOT discipline, PDF style, write-safety, claim-status
-> framing, brochure QA, and language policy.
+> framing, brochure QA, language policy, literature-grounded
+> refinements, MCP registration, audit-and-RAG-coverage gates, and the
+> next-wave-workflow pattern.
+>
+> **TL;DR for new sessions:** open [`AGENT_WAKEUP.md`](AGENT_WAKEUP.md)
+> for a one-page wake-up card (rules + connection commands for every
+> host), then read
+> [`docs/agents/agent-bootstrap.md`](docs/agents/agent-bootstrap.md)
+> for the full bootstrap — skill loading, repo map, three Postgres SSOT
+> connection paths, build + QA workflow, MCP registration recipe.
+
+---
+
+## Rule Index
+
+The normative rule files in [`docs/agent-rules/`](docs/agent-rules/)
+are numbered. New contributors and external readers should skim the
+full index — every rule was added in response to a real audit
+finding. Curated audits live in [`docs/audits/`](docs/audits/);
+recent ones include
+[`build-2026-05-29-v13.md`](docs/audits/build-2026-05-29-v13.md),
+[`build-2026-05-29-v14.md`](docs/audits/build-2026-05-29-v14.md),
+[`build-2026-05-29-v15.md`](docs/audits/build-2026-05-29-v15.md),
+[`build-2026-05-29-v16.md`](docs/audits/build-2026-05-29-v16.md), and
+[`build-2026-05-29-v17.md`](docs/audits/build-2026-05-29-v17.md).
+
+- [`00-canonical-pipeline.md`](docs/agent-rules/00-canonical-pipeline.md) — Rust + pandoc + tectonic is the only supported renderer.
+- [`01-ssot-and-derived-artifacts.md`](docs/agent-rules/01-ssot-and-derived-artifacts.md) — Postgres `ssot_brochure.chapters` is authoritative; files are derived.
+- [`02-pdf-style.md`](docs/agent-rules/02-pdf-style.md) — white academic title page, serif typography, S³AI hero panels, no teal corporate covers.
+- [`03-safety-railway-postgres.md`](docs/agent-rules/03-safety-railway-postgres.md) — read-only by default; writes require backup, dry-run, explicit `go ahead`; no DSN / token leakage.
+- [`04-claim-status.md`](docs/agent-rules/04-claim-status.md) — Verified / Empirical fit / Open conjecture / High-risk / Retracted; no Nobel claims as deliverables.
+- [`05-brochure-qa-checklist.md`](docs/agent-rules/05-brochure-qa-checklist.md) — pre-publish QA: duplicates, stale markers, secrets, language, qpdf / pdfinfo / pdftotext.
+- [`06-language-policy.md`](docs/agent-rules/06-language-policy.md) — public repo artefacts are English-only.
+- [`07-literature-grounded-refinements.md`](docs/agent-rules/07-literature-grounded-refinements.md) — RAGAS CI thresholds, `falsification_path` gate, `alt_text` non-null, tectonic pinning, each with explicit `Status:` line.
+- [`08-mcp-registration.md`](docs/agent-rules/08-mcp-registration.md) — `-s user`, absolute wrapper path, no piped install, reset scopes before re-adding, restart host.
+- [`09-audit-and-rag-coverage.md`](docs/agent-rules/09-audit-and-rag-coverage.md) — embedding coverage, stale-embedding detector, schema-vs-rule consistency, claim-status sweep. Reference implementation: [`scripts/verify-ssot-integrity.sh`](scripts/verify-ssot-integrity.sh).
+- [`10-next-wave-workflow.md`](docs/agent-rules/10-next-wave-workflow.md) — normative five-step pattern for every critic-proof pass: forensic audit → migration SQL → runbook → SSOT snapshot → cross-repo refresh.
+
+---
+
+## Quickstart — wake up an AI agent
+
+Get any MCP-aware AI agent (Claude Code, Cursor, Windsurf, opencode,
+Perplexity Computer) into the same operating posture as the rules in
+[`AGENTS.md`](AGENTS.md), then print a fresh GOLDEN CHAIN PDF.
+
+### Common prerequisites
+
+```bash
+# 1. Build (or use the prebuilt) MCP server binary
+cargo build --release
+
+# 2. Provide DSN locally via .env — NEVER commit it
+cp .env.example .env
+# edit .env, set TRIOS_DATABASE_URL (or DATABASE_URL) — env-var name only
+
+# 3. Confirm pandoc + tectonic are on PATH
+pandoc --version && tectonic --version
+```
+
+The `.env` file is read at server-start time only; the DSN never enters
+any host's configuration file. This satisfies rule 4 of
+[`AGENTS.md`](AGENTS.md).
+
+### Claude Code
+
+> ⚠️ **Use `-s user` (global), not the default local scope.**
+> The default scope is *local* — the server is registered only for the
+> current project directory and is invisible to agents running from
+> anywhere else. Always pass `-s user` so the entry lives in your user
+> config and every project / agent session sees it.
+>
+> ⚠️ **Do not pipe the `add` command** (`echo ... | claude mcp add ...`)
+> — the confirmation prompt gets swallowed and the entry is silently
+> not written. Run it directly.
+>
+> ⚠️ **Use an absolute path to the binary**, not `./target/...` — a
+> user-scope entry is executed from any working directory, so a
+> relative path will fail outside the build folder.
+
+```bash
+# Replace /ABS/PATH/trios-mcp-rag with the absolute path to your clone.
+claude mcp add trios-mcp-rag -s user -- \
+  sh -c 'cd /ABS/PATH/trios-mcp-rag && set -a && . ./.env && exec ./target/release/trios-mcp-rag'
+
+claude mcp list                    # should show: trios-mcp-rag … ✓ Connected
+claude mcp get trios-mcp-rag       # Status: ✓ Connected; Scope: User (available in all your projects)
+```
+
+**Reset / re-register** if something went wrong (e.g. an earlier local-scope
+entry, a stale test name, or a duplicate):
+
+```bash
+claude mcp remove trios-mcp-rag                 # remove user-scope entry
+claude mcp remove trios-mcp-rag --scope local   # remove project-local leftover, if any
+claude mcp list                                  # confirm empty / single clean entry
+# then re-run the `claude mcp add … -s user …` command above.
+```
+
+**Restart the Claude Code session** after registering — MCP tools are
+loaded at session start. After restart you should see all 13 tools
+(`search_chapters`, `get_chapter`, `build_pdf`, …).
+
+### Cursor / Windsurf / opencode
+
+In each host's MCP-server settings, add an entry that launches
+`./target/release/trios-mcp-rag` with environment loaded from `./.env`.
+Verify with the host's MCP-tools panel. Detailed per-host guides:
+[`Connection guides`](#connection-guides) section below.
+
+### Perplexity Computer
+
+1. Open [Manage skills](https://www.perplexity.ai/computer/skills).
+2. Upload [`docs/skills/trios-mcp-rag.zip`](docs/skills/trios-mcp-rag.zip)
+   and [`docs/skills/trios-research-canon.zip`](docs/skills/trios-research-canon.zip)
+   under "User skills".
+3. The descriptions include trigger phrases; Perplexity auto-loads them
+   when a relevant task arrives.
+
+For end-to-end PDF builds, drive Claude Code locally — Perplexity
+Computer uses the skills for operating posture, not as the renderer.
+
+### Generic agentskills-compatible host
+
+Unzip `docs/skills/*.zip` and point your host's skill loader at the
+resulting directory, then register `./target/release/trios-mcp-rag`
+with your MCP layer.
+
+### Build a fresh GOLDEN CHAIN PDF
+
+Once the agent is awake:
+
+```bash
+trios-mcp-rag build-pdf --dry-run
+
+trios-mcp-rag build-pdf \
+  --book-mode \
+  --out-dir generated/out \
+  --pdf-name "GOLDEN_CHAIN_$(date +%F).pdf"
+```
+
+Reference baseline build (post-v12, 2026-05-29):
+**69 chapters → 259 pages → ~3.5 MB**, cover inserted, database read
+**read-only**. Reference sha256:
+`6d2e29ed32cc92b4aea32a0c639f7f16c646d94e1aa4adba97787869ec79293d`.
+See `docs/qa/brochure-pdf-checklist.md` for the full numeric baseline
+and historical waves (v8 → v10 → v12 → … → v17; v13–v17 are
+audit-only, baseline unchanged).
+
+Then run the QA checklist
+([`docs/qa/brochure-pdf-checklist.md`](docs/qa/brochure-pdf-checklist.md)
+and [`docs/rag/PDF_QA_CHECKLIST.md`](docs/rag/PDF_QA_CHECKLIST.md))
+before sharing the artefact.
 
 ---
 
@@ -17,16 +169,19 @@ Exposes MCP tools that let AI agents (Claude Code, Cursor, Windsurf, opencode, e
 
 This repo serves the **Trinity S³AI** compendium. The project follows a
 verification-first discipline. Before citing any claim, check the
-evidence ledger:
+evidence ledger. **Note:** the first three rows below live in the
+sister formalization repository
+[`gHashTag/trinity-s3ai`](https://github.com/gHashTag/trinity-s3ai)
+(theorem-level evidence ledger); the last three live in this repo.
 
-| Document | Purpose |
-|----------|---------|
-| [`docs/CORRECTED_GAP_ANALYSIS.md`](docs/CORRECTED_GAP_ANALYSIS.md) | Claim-by-claim mapping to repo evidence (file/theorem/PR/commit) |
-| [`docs/RETRACTED_OR_UNVERIFIED_CLAIMS.md`](docs/RETRACTED_OR_UNVERIFIED_CLAIMS.md) | Registry of withdrawn or hallucinated claims |
-| [`docs/NOBEL_LEVEL_RESEARCH_PROGRAM.md`](docs/NOBEL_LEVEL_RESEARCH_PROGRAM.md) | 5–10 year falsifiable research program (not a prize promise) |
-| [`docs/RAG_TEST_PLAN.md`](docs/RAG_TEST_PLAN.md) | Local unit, MCP smoke, RAG quality, PDF, and Railway write-gate tests |
-| [`docs/CHAIN_OF_CUSTODY_COMPETITORS.md`](docs/CHAIN_OF_CUSTODY_COMPETITORS.md) | Chain-of-custody proof competitor map for DePIN positioning |
-| [`ROADMAP.md`](ROADMAP.md) | Implementation roadmap for MCP, PDF, SSOT, and custody-proof work |
+| Document | Repo | Purpose |
+|----------|------|---------|
+| [`docs/CORRECTED_GAP_ANALYSIS.md`](https://github.com/gHashTag/trinity-s3ai/blob/main/docs/CORRECTED_GAP_ANALYSIS.md) | trinity-s3ai | Claim-by-claim mapping to repo evidence (file/theorem/PR/commit) |
+| [`docs/RETRACTED_OR_UNVERIFIED_CLAIMS.md`](https://github.com/gHashTag/trinity-s3ai/blob/main/docs/RETRACTED_OR_UNVERIFIED_CLAIMS.md) | trinity-s3ai | Registry of withdrawn or hallucinated claims |
+| [`docs/NOBEL_LEVEL_RESEARCH_PROGRAM.md`](https://github.com/gHashTag/trinity-s3ai/blob/main/docs/NOBEL_LEVEL_RESEARCH_PROGRAM.md) | trinity-s3ai | 5–10 year falsifiable research program (not a prize promise) |
+| [`docs/RAG_TEST_PLAN.md`](docs/RAG_TEST_PLAN.md) | this repo | Local unit, MCP smoke, RAG quality, PDF, and Railway write-gate tests |
+| [`docs/CHAIN_OF_CUSTODY_COMPETITORS.md`](docs/CHAIN_OF_CUSTODY_COMPETITORS.md) | this repo | Chain-of-custody proof competitor map for DePIN positioning |
+| [`ROADMAP.md`](ROADMAP.md) | this repo | Implementation roadmap for MCP, PDF, SSOT, and custody-proof work |
 
 **Current snapshot (trinity-s3ai `main`, 2026-05-24):**
 - **1,762** machine-checked theorems (`Qed`/`Defined`)
@@ -104,13 +259,21 @@ The server expects a `ssot_brochure.chapters` table with columns:
 
 ```sql
 CREATE TABLE ssot_brochure.chapters (
-    slug        TEXT PRIMARY KEY,
-    kind        TEXT NOT NULL,
-    order_key   INT NOT NULL,
-    title       TEXT NOT NULL,
-    body_md     TEXT NOT NULL,
-    word_count  INT NOT NULL DEFAULT 0
+    slug              TEXT PRIMARY KEY,
+    kind              TEXT NOT NULL,
+    order_key         INT  NOT NULL,
+    title             TEXT NOT NULL,
+    body_md           TEXT NOT NULL,
+    illustration_url  TEXT,                        -- nullable; URL or NULL
+    sha256            TEXT,                        -- recomputed by W38 trigger
+    word_count        INT NOT NULL DEFAULT 0,      -- recomputed by W38 trigger
+    byte_size         INT,                         -- octet_length(body_md)
+    format            TEXT,                        -- 'md' default
+    asset_sha         TEXT,                        -- FK to assets registry
+    updated_at        TIMESTAMPTZ DEFAULT now()    -- bumped by W38 trigger
 );
+-- See docs/agent-rules/01-ssot-and-derived-artifacts.md for the
+-- authoritative schema rule. Run `\d ssot_brochure.chapters` to verify.
 ```
 
 ## Connection guides

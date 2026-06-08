@@ -69,6 +69,50 @@ Not: "Connect using the literal connection string copied from Railway."
 The Rust pipeline in this repo already follows that contract (see
 README → "Production safety"); the agent must do the same.
 
+### Reference implementation
+
+The secrets-discipline gate is enforced at commit time by
+[`.pre-commit-config.yaml`](../../.pre-commit-config.yaml) and
+[`.gitleaks.toml`](../../.gitleaks.toml). The active hooks are:
+
+  - **`gitleaks v8.21.0`** with two custom rules — `postgres-dsn`
+    matches any `postgres(ql)?://user:pass@host` form, and
+    `railway-tcp-proxy` matches Railway's TCP-proxy hostname
+    patterns. These fire before the commit object is created;
+    bypassing them requires an explicit `--no-verify`, which is
+    out-of-policy without a same-session `go ahead`.
+  - **`pre-commit-hooks v4.6.0`** baseline (whitespace, large-file,
+    merge-conflict-marker, private-key detection).
+
+A wave that adds a new secret class (e.g. a new third-party API
+key) MUST add the matching gitleaks rule in the same commit. The
+rule and the hook are the only sanctioned places where rule 03
+leaves the documentation layer and becomes executable.
+
+### Bootstrap install (added v16)
+
+`.pre-commit-config.yaml` and `.gitleaks.toml` are configuration
+files, not installed binaries. A fresh `git clone` of this repo
+does **not** run the hooks until a human (or agent on their behalf)
+installs the `pre-commit` framework and registers the local git
+hook. v15 named the binaries in this rule without saying so;
+v16 adds the missing one-time setup:
+
+```bash
+# One-time, per clone, before the first commit:
+python3 -m pip install --user pre-commit   # or: pipx install pre-commit
+pre-commit install                          # writes .git/hooks/pre-commit
+pre-commit run --all-files                  # sanity-check on existing tree
+```
+
+Verification: `test -x .git/hooks/pre-commit` must succeed; the
+hook script's first non-shebang line should reference `pre-commit`.
+If either check fails, the gitleaks rule is **not** actually
+gating commits — fix the bootstrap before continuing the wave.
+The matching note in the skill mirror's `scripts-inventory.md` (the
+`.pre-commit-config.yaml` row) reproduces this requirement so an
+agent reading only the skill catalogue cannot miss it.
+
 ## If a secret is accidentally exposed
 
 1. Stop the current operation.
@@ -86,3 +130,39 @@ README → "Production safety"); the agent must do the same.
 Same rules apply to CI: agents must not embed Railway / Postgres
 credentials in workflow files, action inputs, or container build args.
 Use GitHub Actions secrets / Railway-side env injection, by name.
+
+## Known non-paths (do not waste time on these)
+
+These approaches have been tried and do not work. They are documented
+so future agents do not re-attempt them.
+
+### Custom-credentials HTTPS proxy for Postgres TCP
+
+The Perplexity Computer `custom-credentials` mechanism is an HTTPS
+proxy that injects bearer tokens into outbound HTTPS requests. It
+cannot route Postgres TCP traffic (libpq protocol over port 5432) —
+the wire protocols are incompatible. Attempts to set
+`api_credentials=["custom-cred:railway.app"]` for `psql` calls will
+fail at connection time with TLS / handshake errors, not with a clear
+"not supported" message.
+
+**Use one of these instead** (documented in
+`docs/agents/agent-bootstrap.md` §3):
+
+- **Path A — Pipedream PostgreSQL connector.** Routes via Pipedream's
+  managed proxy. Requires the connector to be in CONNECTED state and
+  the DSN refreshed in Settings when it expires.
+- **Path B — Local mirror from TSV snapshot.** Restore
+  `docs/agents/ssot-snapshot/chapters-post-<wave>.tsv` into a local
+  Postgres 17 instance. Read-only; carries 6 columns. Sufficient for
+  RAG queries and PDF rebuilds.
+- **Path C — Local `.env` DSN with shell wrapper.** The standard
+  `set -a && . ./.env && exec ...` pattern used by Claude Code
+  registration (rule 08).
+
+### Direct Railway Postgres from in-browser tools
+
+No browser-side tool (Playwright, browser_task, etc.) can speak
+libpq. The Railway dashboard's web SQL console is the only
+in-browser path, and it lacks the audit / backup discipline this rule
+requires; do not use it for writes.

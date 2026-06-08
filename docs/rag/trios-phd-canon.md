@@ -79,19 +79,37 @@ and the current accepted baseline.
 ## 3. Accepted current QA baseline
 
 The baseline below is the **accepted** state for the brochure PDF as of
-the 2026-05 refinement pass. Future builds should meet or improve on
-each line; regressions need an explicit reason.
+the **post-v12 refinement pass (2026-05-29)**. Future builds should
+meet or improve on each line; regressions need an explicit reason. The
+authoritative numeric baseline lives in
+`docs/qa/brochure-pdf-checklist.md` (operational checklist); the table
+here is a mirror for RAG retrieval and is updated each wave.
 
 | Metric                                        | Accepted value                  |
 | --------------------------------------------- | ------------------------------- |
-| Page count (A4)                               | **150**                         |
+| Chapter count (`ssot_brochure.chapters`)      | **69** (post-v12)               |
+| Page count (A4)                               | **259** (band: 240 ± 25)        |
+| File size                                     | **3.5 MB** (~3 530 837 B)       |
+| Reference sha256                              | `6d2e29ed32cc92b4aea32a0c639f7f16c646d94e1aa4adba97787869ec79293d` |
 | `qpdf --check`                                | **clean** (exit 0)              |
 | Exact duplicate long paragraphs               | **0**                           |
 | Duplicate numbered headings                   | **0**                           |
 | Cyrillic hits (public English build)          | **0**                           |
 | Secret / stale / math anomaly hits            | **0**                           |
-| Very short non-empty pages                    | **0**                           |
+| Very short non-empty pages                    | **0** — **decisive regression signal** |
 | Image-heavy / low-context candidate pages     | **1** (title page only)         |
+
+**Baseline history:**
+
+| Wave | Date       | Chapters | Pages | File size |
+|------|------------|----------|-------|-----------|
+| v8   | 2026-05    | 30+      | ~150  | n/a       |
+| v10  | 2026-05    | 62       | ~242  | n/a       |
+| v12  | 2026-05-29 | **69**   | **259** | **3.5 MB** |
+| v13  | 2026-05-29 | 69       | 259   | 3.5 MB    |
+| v14  | 2026-05-29 | 69       | 259   | 3.5 MB    |
+| v15  | 2026-05-29 | 69       | 259   | 3.5 MB    |
+| v16  | 2026-05-29 | 69       | 259   | 3.5 MB    |
 
 Notes:
 
@@ -107,12 +125,16 @@ Notes:
   baseline is zero — symptoms of a hard `\clearpage` per section would
   show up here.
 
-If a future build comes in materially below 150 pages, that is fine
-provided the other rows still hold. A build that comes in above 150
-pages **and** raises the "very short non-empty pages" count is a
-suspected regression of the `TRIOS_PHD_NO_IMAGE_TRAIN` enforcement to
-a hard `\clearpage` per section — read this document and rule 02
-before publishing.
+**The decisive regression signal is row "very short non-empty pages"
+(must stay 0), not absolute page count.** Page count tracks SSOT row
+count and average chapter length, which naturally drift wave-to-wave.
+A build that lands inside the 240 ± 25 band with row "very short
+non-empty pages" still at 0 is accepted. A build outside the band
+*without* short-page rise just means the SSOT changed size; verify
+row count via `SELECT count(*) FROM ssot_brochure.chapters`. A rise
+in short-page count — even with page count inside the band — is the
+`TRIOS_PHD_NO_IMAGE_TRAIN` regression signature; read rule 02 and
+`docs/qa/brochure-pdf-checklist.md` §2/§8 before publishing.
 
 ## 4. Related rules
 

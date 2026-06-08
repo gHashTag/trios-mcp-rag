@@ -1,0 +1,20 @@
+# Pre-commit hooks for trios-mcp-rag.
+# Install: `pip install pre-commit && pre-commit install`
+# Run: `pre-commit run --all-files`
+
+repos:
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.21.0
+    hooks:
+      - id: gitleaks
+        args: ["--config=.gitleaks.toml"]
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: check-merge-conflict
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: detect-private-key
+      - id: check-yaml
+      - id: check-toml

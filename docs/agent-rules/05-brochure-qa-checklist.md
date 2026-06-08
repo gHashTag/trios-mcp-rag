@@ -17,6 +17,28 @@ botched merge or a re-run that appended instead of replacing.
 - Any count > 1 needs an explicit reason (e.g. "Preface" appearing
   twice is wrong; "Appendix A.1" appearing twice is wrong).
 
+**Reference implementation:**
+[`scripts/qa_duplicate_prose.py`](../../scripts/qa_duplicate_prose.py)
+covers duplicate **paragraph** detection (one level deeper than the
+heading-level scan above) and applies four exclusion classes
+so the scan stays signal-rich:
+
+  1. **Bibliographic tokens** — zenodo / vixra / HAL / NIST / DOI
+     patterns and known author / venue strings (legitimately
+     repeated across reference lists).
+  2. **`pdftotext` hyphenation tail lines** — fragments like
+     `spec-` / `ification.` produced by line-wrap reflow.
+  3. **ASCII flow-diagram bars** — `|`, `v`, `^` repeats from
+     box-drawing diagrams.
+  4. **Cross-chapter echoes involving digest chapters**
+     (`kind = 'unified'`) — digest chapters re-state prose from
+     source chapters by design.
+
+Exit code 0 = clean, 1 = real duplicates found. The operational
+form of this check lives in
+[`docs/qa/brochure-pdf-checklist.md`](../qa/brochure-pdf-checklist.md)
+§3.
+
 ## 2. Stale-marker scan
 
 Goal: catch leftover scaffolding from drafting.
@@ -100,9 +122,11 @@ low-context candidate pages, several of them adjacent — symptoms of
 duplicate "transition" headings that carried hero blocks of their own.
 Removing the transition hero blocks and applying a soft keep-together
 rule (rather than a hard `\clearpage` per section) reduced the
-candidate count to 1 (the title page only) and stabilised the build at
-150 A4 pages with `qpdf --check` clean. See
-`docs/qa/brochure-pdf-checklist.md` for the accepted numeric baseline.
+candidate count to 1 (the title page only) and stabilised the build.
+The **current accepted baseline** (post-v12, 2026-05-29) is
+**69 chapters → 259 A4 pages → 3.5 MB**, with `qpdf --check` clean.
+See `docs/qa/brochure-pdf-checklist.md` for the full numeric baseline
+and `docs/rag/trios-phd-canon.md` §3 for the RAG-mirrored summary.
 
 ## 5. Secret scan
 

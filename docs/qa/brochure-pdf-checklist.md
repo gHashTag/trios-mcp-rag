@@ -23,16 +23,40 @@ pdfinfo generated/out/main.pdf | head
 
 Pass: `qpdf --check` exits 0; `pdfinfo` reports a sensible page count.
 
+### 1a. Reproducibility metadata gate (active since v12)
+
+The PDF MUST NOT carry a `CreationDate` line (or any other timestamp
+field) in its metadata. `SOURCE_DATE_EPOCH` plus tectonic's reproducible
+mode neutralises the non-determinism source called out in Track 4 of
+the literature canon; if `CreationDate` reappears, the sha256 baseline
+`6d2e29ed…` cannot be reproduced.
+
+```bash
+if pdfinfo generated/out/main.pdf | grep -q '^CreationDate'; then
+  echo "FAIL: CreationDate present — reproducibility regression" >&2
+  exit 1
+fi
+```
+
+Pass: the command above prints nothing and exits 0. (Rule 07 §8 —
+`CreationDate` neutralisation is the **active** part of that
+refinement; the tectonic version pin is still `planned`.)
+
 ## 2. Page count
 
 ```bash
 pdfinfo generated/out/main.pdf | awk '/^Pages:/ {print $2}'
 ```
 
-**Accepted baseline: 150 A4 pages.** Materially lower is fine if the
-other rows still hold; materially higher together with a rise in row 8
-("very short non-empty pages") is the signature of a hard
-`\clearpage` regression — re-check the `TRIOS_PHD_NO_IMAGE_TRAIN`
+**Accepted baseline: 259 A4 pages** (post-v12, 2026-05-29) inside the
+**240 ± 25 band**. Current `ssot_brochure.chapters` has **69 rows**
+averaging ~3.75 pp/chapter → ~259 pp. Previously: 150 pp (~30 chapters,
+v8), 242 pp (62 chapters, v10). **The decisive signal for a hard
+`\clearpage` regression is row 8 ("very short non-empty pages") —
+not the absolute page count.** A page count outside the band *without*
+a rise in row 8 means the SSOT grew or shrank, not that the template
+broke. A rise in row 8 — even at a page count inside the band — is
+the regression signature; re-check the `TRIOS_PHD_NO_IMAGE_TRAIN`
 enforcement and prefer a soft keep-together rule for
 heading + hero + first paragraph(s).
 
@@ -55,6 +79,49 @@ pdftotext -layout generated/out/main.pdf - | \
 > citation style. Exclude lines containing `zenodo`, `vixra`, `HAL`,
 > `NIST`, `physics.nist.gov`, `DOI`, or `/Constants/` from the scan.
 > Flag only prose paragraphs that repeat verbatim.
+>
+> **Additional acceptable echo classes** (also exclude before flagging):
+>
+> 1. **Author / venue tokens in references.** Lines matching common
+>    author names listed in the SSOT (`Vasilev`, `Pellis`, `Olsen`,
+>    `Sherbon`, `Heyrovska`, `Coldea`, `Wu`, `Fring`, `El Naschie`),
+>    venue names (`Phys. Rev.`, `Nucl. Phys.`, `arXiv:`), DOIs
+>    (`10.[0-9]+/`), and viXra IDs.
+> 2. **Hyphenation tail lines.** `pdftotext -layout` preserves
+>    end-of-line hyphenated word fragments (`spec-`, `inspec-`,
+>    `pub-`, `ification.`, `lications`). These are PDF text-extraction
+>    artefacts, not content duplicates — exclude lines matching
+>    `^[a-z]+\.?$` or `^[a-z]+-$`.
+> 3. **ASCII flow diagrams.** Vertical bars (`|`) and stand-alone
+>    arrow letters (`v`, `^`) on otherwise empty lines are part of
+>    intentional ASCII flow charts inside chapters — exclude lines
+>    matching `^\s*[|v^]\s*$`.
+> 4. **`kind='unified'` digest articles.** Chapters with
+>    `kind='unified'` are by design summary / digest articles that
+>    aggregate key passages from other chapters (analogous to a
+>    "Conclusions" section in a textbook). Echoes between a `unified`
+>    chapter and any other chapter are **acceptable by design**. Flag
+>    only echoes that occur **between two non-`unified` chapters**.
+
+*Pragmatic command (incorporates all four exclusions):*
+
+```bash
+pdftotext -layout generated/out/main.pdf - | \
+  awk 'BEGIN{RS=""} length($0) > 200 {print}' | \
+  grep -viE 'zenodo|vixra|HAL|NIST|physics\.nist\.gov|DOI|/Constants/|arxiv\.org|Vasilev|Pellis|Olsen|Sherbon|Heyrovsk|Coldea|Wu, J|Fring|El Naschie|Phys\. Rev|Nucl\. Phys|10\.[0-9]+/' | \
+  awk 'BEGIN{RS=""} !/^[[:space:]]*[a-z]+[.-]?[[:space:]]*$/ && !/^[[:space:]]*[|v\^][[:space:]]*$/ {print}' | \
+  sort | uniq -c | sort -rn | awk '$1 > 1 {print}'
+```
+
+**Reference implementation:**
+[`scripts/qa_duplicate_prose.py`](../../scripts/qa_duplicate_prose.py)
+encodes the four exclusion classes above as Python regexes and a
+slug-set for the `kind='unified'` digest exemption. Run it as
+`python3 scripts/qa_duplicate_prose.py generated/out/main.pdf`
+(exit 0 = clean, 1 = real duplicates). The normative rule for this
+check lives in
+[`docs/agent-rules/05-brochure-qa-checklist.md`](../agent-rules/05-brochure-qa-checklist.md)
+§1.
 
 ## 4. Duplicate numbered headings
 
@@ -106,6 +173,48 @@ pdftotext generated/out/main.pdf - | \
   grep -nE '\\frac|\\sum|\\int|\\sqrt|\$\$|\\\\(left|right)\\b' \
   || echo 'math-anomaly scan: clean'
 ```
+
+Hype words (rule 04 — no Nobel / prize / breakthrough claims as
+deliverables, only as long-term external-validation standards):
+
+```bash
+pdftotext generated/out/main.pdf - | \
+  grep -nE '\bNobel\b|\bbreakthrough\b|\bworld[- ]first\b|\brevolutionary\b|\bunprecedented\b' \
+  || echo 'hype-word scan: clean'
+```
+
+### 6.1 Hype-scan context exclusions
+
+A bare hype-word match is **not** automatically a violation. Rule 04
+permits Nobel and prize references **as long-term external-validation
+standards** — e.g. citing the Shechtman quasicrystals Nobel Prize as
+evidence that a long-shot claim has historical precedent of
+recognition. Before flagging a match, apply these exclusions:
+
+  1. **Historical award references about external work.**
+     Patterns matching `Nobel Prize\s+(in|for)\b` followed within
+     30 tokens by `(won|awarded|received|laureate|2011|Shechtman)`
+     are pointing at an external laureate and are allowed.
+  2. **Direct citation of an external Nobel laureate by name.**
+     Lines that name an external laureate (e.g. Shechtman, Penrose,
+     Glashow) with a DOI / external URL or reference-list anchor in
+     the same paragraph are allowed.
+  3. **Falsification-program framing (`NOBEL_LEVEL_RESEARCH_PROGRAM`,
+     5–10 year falsifiable research program).** Documents that
+     explicitly frame Nobel-level work as a **falsifiable research
+     program** (not a prize promise) are allowed; the framing is
+     itself the rule-04-compliant move.
+  4. **Audit / rule documents.** Matches inside
+     `docs/agent-rules/`, `docs/audits/`,
+     `docs/qa/brochure-pdf-checklist.md`, or `docs/literature/`
+     are policy text discussing the rule, not claim text — these
+     never enter the published PDF.
+
+A hype-word match that survives all four exclusions is a real
+rule-04 violation: stop the build, demote the claim to **Open
+conjecture** with a `**Falsification path:**` paragraph, or remove
+it. Mention the triage outcome in the build changelog so the next
+wave's auditor sees the call.
 
 **Accepted baseline: 0 hits across all three.** Any hit is a hard
 blocker. For secrets, follow rule 03 §"If a secret is accidentally
@@ -172,13 +281,35 @@ Record in the build's change-log entry:
 
 | #  | Metric                                        | Accepted value           |
 |----|-----------------------------------------------|--------------------------|
-| 2  | Page count (A4)                               | 150                      |
+| 0  | Chapter count (`ssot_brochure.chapters`)      | 69 (post-v12)            |
+| 2  | Page count (A4)                               | 259 inside 240 ± 25 band |
+| 0  | File size                                     | ~3.5 MB                  |
+| 0  | Reference sha256                              | `6d2e29ed32cc92b4aea32a0c639f7f16c646d94e1aa4adba97787869ec79293d` |
 | 1  | `qpdf --check`                                | clean                    |
-| 3  | Exact duplicate long paragraphs               | 0                        |
+| 3  | Exact duplicate long paragraphs (after exclusions in §3) | 0           |
 | 4  | Duplicate numbered headings                   | 0                        |
 | 5  | Cyrillic hits (public English build)          | 0                        |
 | 6  | Secret / stale / math anomaly hits            | 0                        |
-| 8  | Very short non-empty pages                    | 0                        |
+| 8  | Very short non-empty pages                    | 0 — **decisive regression signal** |
 | 7  | Image-heavy / low-context candidate pages     | 1 (title page only)      |
 
 A build that meets this table and clears step 9 is accepted.
+
+**Note on baseline history.** The original 150-page baseline was set
+when `ssot_brochure.chapters` held ~30 rows. The SSOT has since grown
+through v9–v12 to 69 chapters; the post-v12 build `f7c36a7`
+(2026-05-29) stabilised at 259 pages / 3.5 MB. **Use row 8 ("very
+short non-empty pages") — not absolute page count — as the primary
+regression detector.** Page count tracks SSOT row count and average
+chapter length, which drift wave to wave; the short-page signal is
+template-driven and binary.
+
+| Wave | Date       | Chapters | Pages | File size | sha256 (first 8) | Notes              |
+|------|------------|----------|-------|-----------|------------------|--------------------|
+| v8   | 2026-05    | 30+      | ~150  | n/a       | n/a              | rebuild            |
+| v10  | 2026-05    | 62       | ~242  | n/a       | n/a              | rebuild            |
+| v12  | 2026-05-29 | **69**   | **259** | **3.5 MB** | `6d2e29ed`     | rebuild            |
+| v13  | 2026-05-29 | 69       | 259   | 3.5 MB    | `6d2e29ed`       | audit-only, no rebuild |
+| v14  | 2026-05-29 | 69       | 259   | 3.5 MB    | `6d2e29ed`       | audit-only, no rebuild |
+| v15  | 2026-05-29 | 69       | 259   | 3.5 MB    | `6d2e29ed`       | audit-only, no rebuild |
+| v16  | 2026-05-29 | 69       | 259   | 3.5 MB    | `6d2e29ed`       | audit-only, no rebuild |

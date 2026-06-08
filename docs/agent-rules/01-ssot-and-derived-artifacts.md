@@ -8,18 +8,42 @@ table on Railway:
 - Primary: `ssot_brochure.chapters`
 - Mirror / fallback: `ssot.chapters`
 
-Schema (from README.md):
+Schema (live Railway / Postgres, post-v12 build — verify before any DDL):
 
 ```sql
 CREATE TABLE ssot_brochure.chapters (
-    slug        TEXT PRIMARY KEY,
-    kind        TEXT NOT NULL,
-    order_key   INT NOT NULL,
-    title       TEXT NOT NULL,
-    body_md     TEXT NOT NULL,
-    word_count  INT NOT NULL DEFAULT 0
+    slug              TEXT PRIMARY KEY,
+    kind              TEXT NOT NULL,
+    order_key         INT  NOT NULL,
+    title             TEXT NOT NULL,
+    body_md           TEXT NOT NULL,
+    illustration_url  TEXT,                        -- nullable; URL or NULL
+    sha256            TEXT,                        -- recomputed by W38 trigger
+    word_count        INT NOT NULL DEFAULT 0,      -- recomputed by W38 trigger
+    byte_size         INT,                         -- octet_length(body_md)
+    format            TEXT,                        -- 'md' default
+    asset_sha         TEXT,                        -- FK to assets registry
+    updated_at        TIMESTAMPTZ DEFAULT now()    -- bumped by W38 trigger
 );
 ```
+
+**Schema verification before any DDL is mandatory.** Run:
+
+```bash
+psql "$DATABASE_URL" -c '\d ssot_brochure.chapters'
+```
+
+The live table is authoritative; this file documents the post-v12
+shape but is **not** the source of truth — a migration may have added
+or renamed columns since this rule was last updated. The cross-session
+bootstrap (`docs/agents/agent-bootstrap.md`) explains the three SSOT
+access paths (Pipedream connector, local mirror from TSV snapshot,
+local `.env` DSN). The local TSV mirror at
+`docs/agents/ssot-snapshot/chapters-post-v12.tsv` carries only the
+render-essential columns (slug, kind, order_key, title, body_md,
+illustration_url) and is sufficient for read-only RAG; the W38 trigger
+columns (`sha256`, `word_count`, `byte_size`, `updated_at`) live only
+in the Railway primary.
 
 Anything that does not live in (or derive from) this table is **not**
 the SSOT, even if it looks authoritative.

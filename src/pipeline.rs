@@ -925,6 +925,11 @@ pub fn build(cfg: &BuildConfig, loader: &ChapterLoader) -> Result<BuildReport> {
     let mut pandoc = Command::new("pandoc");
     pandoc.arg(&md_path).arg("-o").arg(&tex_path);
     pandoc.arg("--columns=60");
+    // v10: enable smart typography ("X" -> “X”, ' -- ' -> em-dash,
+    // ... -> …) so source can remain ASCII-friendly while output is
+    // typographically correct. Pandoc's smart extension is conservative
+    // inside code spans, math, and raw blocks.
+    pandoc.arg("--from=markdown+smart");
     if let Some(t) = &template_resolved {
         if !t.is_file() {
             return Err(anyhow!("template not found: {}", t.display()));
@@ -1036,6 +1041,25 @@ pub fn build(cfg: &BuildConfig, loader: &ChapterLoader) -> Result<BuildReport> {
                 let _ = std::fs::rename(&merged, &pdf_path);
             }
         }
+    }
+
+    // Re-inject PDF metadata after the qpdf merge (qpdf --empty drops Info dict
+    // from the source PDFs, so Title/Author/Subject end up blank). Use
+    // exiftool when available; silently skip otherwise (metadata is optional
+    // but strongly recommended for archive accessibility / citation).
+    if binary_available("exiftool") {
+        eprintln!("[build] injecting PDF metadata...");
+        let _ = Command::new("exiftool")
+            .arg("-overwrite_original")
+            .arg("-Title=GOLDEN CHAIN — Trinity S³AI Compendium")
+            .arg("-Author=Dmitrii Vasilev; Stergios Pellis; Scott Olsen")
+            .arg("-Subject=φ-structured physical constants, unification, and silicon verification")
+            .arg("-Keywords=golden ratio; fine-structure constant; symbolic regression; MDL; TRIOS; S³AI; falsification ledger; claim-status; DePIN; TinyTapeout SKY26b")
+            .arg("-Producer=trios-mcp-rag build-pdf (pandoc + tectonic)")
+            .arg("-Creator=trios-mcp-rag")
+            .arg("-Language=en")
+            .arg(&pdf_path)
+            .status();
     }
 
     eprintln!("[build] done");

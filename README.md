@@ -109,9 +109,24 @@ CREATE TABLE ssot_brochure.chapters (
     order_key   INT NOT NULL,
     title       TEXT NOT NULL,
     body_md     TEXT NOT NULL,
-    word_count  INT NOT NULL DEFAULT 0
+    word_count  INT NOT NULL DEFAULT 0,
+    -- Multi-doc SSOT (added 2026-06-08, migration in docs/migrations/):
+    doc         TEXT NOT NULL   -- 'golden-chain-compendium' | 'paper3-methodology' | ...
 );
+CREATE INDEX ix_chapters_doc_order ON ssot_brochure.chapters (doc, order_key);
 ```
+
+The `doc` column groups chapters into per-document slugs so a single
+table hosts multiple PDF artefacts (compendium, paper3, future papers).
+`build_pdf` and `build_book` accept a `doc` argument to pick which
+document to render; default is `golden-chain-compendium` for
+backwards-compatibility. See
+[docs/migrations/2026-06-08-multi-doc-runbook.md](docs/migrations/2026-06-08-multi-doc-runbook.md)
+for the migration runbook.
+
+Legacy databases without the `doc` column are detected at runtime via
+`information_schema.columns` and the SQL falls back to the unfiltered
+legacy query, so old deployments keep working until they are migrated.
 
 ## Connection guides
 

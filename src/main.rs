@@ -480,6 +480,29 @@ fn tool_build_pdf(args: &Value) -> anyhow::Result<Value> {
     if let Some(s) = args.get("chapters_table").and_then(|v| v.as_str()) {
         cfg.chapters_table = s.into();
     }
+    // Multi-doc SSOT: explicit `doc` arg overrides default. JSON `null`
+    // disables filtering entirely (legacy behaviour, useful for full
+    // ssot dumps or pre-migration databases).
+    if let Some(v) = args.get("doc") {
+        cfg.doc = if v.is_null() {
+            None
+        } else if let Some(s) = v.as_str() {
+            Some(s.into())
+        } else {
+            cfg.doc
+        };
+    }
+    // If pdf_name was not explicitly set AND we are building paper3,
+    // pick a recognisable default filename instead of `main.pdf`.
+    if args.get("pdf_name").is_none() {
+        if let Some(d) = cfg.doc.as_deref() {
+            cfg.pdf_name = match d {
+                "paper3-methodology"     => "paper3_methodology.pdf".into(),
+                "golden-chain-compendium" => "GOLDEN_CHAIN_compendium.pdf".into(),
+                other => format!("{}.pdf", other),
+            };
+        }
+    }
     if let Some(s) = args.get("out_dir").and_then(|v| v.as_str()) {
         cfg.out_dir = PathBuf::from(s);
     }
@@ -815,17 +838,18 @@ fn tools_def() -> Value {
             "build_dir":{"type":"string","default":"generated/build"},
             "compile":{"type":"boolean","default":true}
          }}},
-        {"name":"build_pdf","description":"Run the SSOT->Markdown->pandoc->tectonic->PDF pipeline. Defaults to dry_run=true (check env/deps/paths only). Set dry_run=false to actually build.",
+        {"name":"build_pdf","description":"Run the SSOT->Markdown->pandoc->tectonic->PDF pipeline. Defaults to dry_run=true (check env/deps/paths only). Set dry_run=false to actually build. Set `doc` to pick which document to build: 'golden-chain-compendium' (default, 69 chapters) or 'paper3-methodology' (9-section arXiv paper).",
          "inputSchema":{"type":"object","properties":{
             "dry_run":{"type":"boolean","default":true},
             "database_url_env":{"type":"string","default":"DATABASE_URL"},
             "chapters_table":{"type":"string","default":"ssot_brochure.chapters"},
+            "doc":{"type":["string","null"],"default":"golden-chain-compendium","description":"Document slug. Pass null to disable filter (legacy pre-migration mode).","enum":["golden-chain-compendium","paper3-methodology",null]},
             "out_dir":{"type":"string"},
             "build_dir":{"type":"string"},
             "template":{"type":"string"},
             "lua_filter":{"type":"string"},
             "repo_root":{"type":"string"},
-            "pdf_name":{"type":"string","default":"main.pdf"},
+            "pdf_name":{"type":"string","description":"Auto-picked from doc if omitted (GOLDEN_CHAIN_compendium.pdf / paper3_methodology.pdf)."},
             "limit":{"type":"integer"},
             "book_mode":{"type":"boolean","default":true}
          }}},
@@ -835,17 +859,18 @@ fn tools_def() -> Value {
          "inputSchema":{"type":"object","properties":{}}},
         {"name":"get_honest_counters","description":"Return the corrected, audited snapshot of trinity-s3ai formal proof counters and claim statuses",
          "inputSchema":{"type":"object","properties":{}}},
-        {"name":"build_book","description":"Extended PDF pipeline with book-mode enabled (TOC, part dividers, front matter). Defaults to dry_run=true.",
+        {"name":"build_book","description":"Extended PDF pipeline with book-mode enabled (TOC, part dividers, front matter). Defaults to dry_run=true. Same `doc` semantics as build_pdf.",
          "inputSchema":{"type":"object","properties":{
             "dry_run":{"type":"boolean","default":true},
             "database_url_env":{"type":"string","default":"DATABASE_URL"},
             "chapters_table":{"type":"string","default":"ssot_brochure.chapters"},
+            "doc":{"type":["string","null"],"default":"golden-chain-compendium","enum":["golden-chain-compendium","paper3-methodology",null]},
             "out_dir":{"type":"string"},
             "build_dir":{"type":"string"},
             "template":{"type":"string"},
             "lua_filter":{"type":"string"},
             "repo_root":{"type":"string"},
-            "pdf_name":{"type":"string","default":"book.pdf"},
+            "pdf_name":{"type":"string"},
             "limit":{"type":"integer"}
          }}},
         {"name":"preview_chapter_update","description":"DRY-RUN only. Show the SQL diff and word-count change for a proposed chapter body update without executing any write.",

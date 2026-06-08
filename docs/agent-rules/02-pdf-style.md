@@ -35,10 +35,26 @@ it unless the user explicitly requests a one-shot variant.
   `\clearpage` per section creates short title-only pages and is a
   regression. See `docs/rag/trios-phd-canon.md` §2 for the named
   invariant and the accepted QA baseline.
-- **Cover**: white academic title page is the default. **No teal
-  corporate cover** unless the user explicitly asks for one for that
-  build. **No black cover** unless the user explicitly asks for one
-  for that build.
+- **Cover**: the plain-LaTeX white academic titlepage produced by the
+  `build_cover` tool is the **fallback** when no canonical cover asset
+  has been selected for the build. When a cover asset exists, the
+  canonical cover is the `GOLDEN_BRIDGE_COVER_CANON` — the
+  user-selected **GPT Image 2 v1** cover (black velvet background,
+  antique gold calligraphic `Golden Bridge` title, white chalk
+  Leonardo-style side formulas, three microchips labeled `PHI` /
+  `EULER` / `GAMMA` connected by gold circuitry, `TRINITY S3AI` bottom
+  ribbon). Canonical artifact names:
+  `golden_bridge_gpt2_v1_canonical_6x9_print_cover.pdf` / `.png` and
+  `golden_bridge_gpt2_v1_canonical_6x9_bleed_cover.png`. See
+  [07-golden-bridge-cover.md](07-golden-bridge-cover.md) for the full
+  identity and the `ASSET_HANDOFF` that wires it as page 1.
+  Whichever cover is in use, **no teal corporate cover**, **no
+  ReportLab cover**, **no CAD / vector UI cover**, and **no assembled
+  flat corporate layout** unless the user explicitly asks for that
+  variant for the current build
+  (`DO_NOT_REBUILD_WITH_GENERIC_CODE`). The
+  `build_cover` plain-LaTeX titlepage is also **not** a license to
+  replace a selected canonical cover.
 
 ## What "explicit request" means
 

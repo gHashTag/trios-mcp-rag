@@ -43,6 +43,11 @@ specific change** — defaults do not change without an explicit instruction.
 - [docs/agent-rules/06-language-policy.md](docs/agent-rules/06-language-policy.md)
   — Public repo artefacts are English-only at the time of writing.
   Chat with the maintainer may be Russian.
+- [docs/agent-rules/07-golden-bridge-cover.md](docs/agent-rules/07-golden-bridge-cover.md)
+  — `GOLDEN_BRIDGE_COVER_CANON` cover identity, the
+  `TRIOS_PHD_CANONICAL_PIPELINE` recap, `DO_NOT_REBUILD_WITH_GENERIC_CODE`,
+  `COVER_TEXT_RISK`, `SECRET_SAFETY`, and the `ASSET_HANDOFF` for using a
+  selected cover artifact as the first page of the PDF.
 - [docs/rag/trios-phd-canon.md](docs/rag/trios-phd-canon.md)
   — Canonical TRIOS PhD invariants for RAG / agent retrieval, including
   the `TRIOS_PHD_NO_IMAGE_TRAIN` rule and the accepted PDF QA baseline.
@@ -84,5 +89,27 @@ specific change** — defaults do not change without an explicit instruction.
    regression. See
    [docs/rag/trios-phd-canon.md](docs/rag/trios-phd-canon.md) and
    rule 02 for the canonical phrasing.
+9. **`GOLDEN_BRIDGE_COVER_CANON`** — the canonical cover is the
+   user-selected **GPT Image 2 v1** style — visually the closest of
+   the GPT Image 2 candidates to the previous TRIOS / *Flos Aureus*
+   cover: black velvet / chalkboard background, deep antique gold
+   calligraphic `Golden Bridge` title, white chalk Leonardo-style
+   side formulas / diagrams, **three microchips labeled `PHI`,
+   `EULER`, `GAMMA` connected by gold circuitry** as the central
+   emblem, authors `Dmitrii Vasilev · Stergios Pellis · Scott Olsen`,
+   and a bottom `TRINITY S3AI` ribbon. The canonical artifact names
+   are `golden_bridge_gpt2_v1_canonical_6x9_print_cover.pdf` /
+   `.png` and `golden_bridge_gpt2_v1_canonical_6x9_bleed_cover.png`
+   — use them verbatim. Do **not** rebuild it with generic code
+   (`DO_NOT_REBUILD_WITH_GENERIC_CODE`) — no CAD/vector UI cover, no
+   ReportLab cover, no corporate brochure, no assembled flat layout —
+   unless the user explicitly asks for that variant for the current
+   build. The selected cover artifact enters the canonical pipeline as
+   the first page via the `ASSET_HANDOFF` described in rule 07. GPT
+   image text is acceptable as cover art but is **not** authoritative
+   for publication metadata (`COVER_TEXT_RISK`). Cover-related assets
+   and references must obey `SECRET_SAFETY` — no DSNs, tokens, or
+   credentialed URLs in repo or PDF. See
+   [docs/agent-rules/07-golden-bridge-cover.md](docs/agent-rules/07-golden-bridge-cover.md).
 
 If you cannot satisfy a rule, stop and report. Do not silently relax it.

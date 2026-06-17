@@ -599,11 +599,11 @@ pub fn load_from_postgres(cfg: &BuildConfig) -> Result<Vec<Chapter>> {
             sql.push_str(&format!(" LIMIT {}", n as i64));
         }
         let rows = tokio::time::timeout(
-        std::time::Duration::from_secs(30),
+        std::time::Duration::from_secs(120),
         client.query(&sql, &[]),
     )
     .await
-    .context("query chapters timed out (30s)")?
+    .context("query chapters timed out (120s)")?
     .context("query chapters")?;
         let mut chapters: Vec<Chapter> = rows
             .iter()
@@ -872,7 +872,7 @@ pub fn build(cfg: &BuildConfig, loader: &ChapterLoader) -> Result<BuildReport> {
         })
         .collect();
     if !missing.is_empty() {
-        eprintln!("[build] downloading {} missing assets from Postgres...", missing.len());
+        eprintln!("[build] downloading {} missing assets from Postgres (batched)...", missing.len());
         let dsn = resolve_dsn(cfg)?;
         let rt = tokio::runtime::Builder::new_multi_thread()
             .worker_threads(1)
@@ -885,24 +885,29 @@ pub fn build(cfg: &BuildConfig, loader: &ChapterLoader) -> Result<BuildReport> {
             tokio::spawn(async move {
                 let _ = conn.await;
             });
-            let rows = tokio::time::timeout(
-                std::time::Duration::from_secs(30),
-                client.query(
-                    "SELECT name, bytes::text AS bytes_hex FROM ssot_brochure.assets WHERE name = ANY($1)",
-                    &[&missing],
-                ),
-            )
-            .await
-            .context("query assets timed out (30s)")?
-            .context("query assets")?;
-            for r in &rows {
-                let name: String = r.get("name");
-                let hex_str: String = r.get("bytes_hex");
-                let bytes = hex_decode(&hex_str)
-                    .with_context(|| format!("decode asset {}", name))?;
-                let path = img_dir.join(&name);
-                std::fs::write(&path, &bytes)
-                    .with_context(|| format!("write asset {}", path.display()))?;
+            // Download assets in batches of 5 to avoid large hex-conversion timeouts
+            let batch_size = 5usize;
+            for chunk in missing.chunks(batch_size) {
+                let chunk_vec: Vec<String> = chunk.iter().map(|s| s.to_string()).collect();
+                let rows = tokio::time::timeout(
+                    std::time::Duration::from_secs(60),
+                    client.query(
+                        "SELECT name, bytes::text AS bytes_hex FROM ssot_brochure.assets WHERE name = ANY($1)",
+                        &[&chunk_vec],
+                    ),
+                )
+                .await
+                .context(format!("query assets batch timed out (60s) for {} items", chunk.len()))?
+                .context("query assets batch")?;
+                for r in &rows {
+                    let name: String = r.get("name");
+                    let hex_str: String = r.get("bytes_hex");
+                    let bytes = hex_decode(&hex_str)
+                        .with_context(|| format!("decode asset {}", name))?;
+                    let path = img_dir.join(&name);
+                    std::fs::write(&path, &bytes)
+                        .with_context(|| format!("write asset {}", path.display()))?;
+                }
             }
             Ok::<_, anyhow::Error>(())
         })?;
